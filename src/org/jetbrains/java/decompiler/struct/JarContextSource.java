@@ -6,6 +6,7 @@ import org.jetbrains.java.decompiler.main.extern.IBytecodeProvider;
 import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
+import org.jetbrains.java.decompiler.util.future.MoreList;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -68,7 +69,7 @@ final class JarContextSource implements IContextSource, AutoCloseable {
         }
       }
     }
-    return new Entries(classes, List.copyOf(directories), others, List.of());
+    return new Entries(classes, MoreList.copyOf(directories), others, MoreList.of());
   }
 
   private void addDirectories(final ZipEntry entry, final Set<String> directories) {

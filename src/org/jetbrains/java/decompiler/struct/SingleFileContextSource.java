@@ -6,6 +6,7 @@ import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
+import org.jetbrains.java.decompiler.util.future.MoreList;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -31,7 +32,7 @@ class SingleFileContextSource implements IContextSource {
 
       if (this.contents != null && singleFile.getName().endsWith(CLASS_SUFFIX)) {
         try (final DataInputFullStream is = new DataInputFullStream(this.contents)) {
-          var clazz = StructClass.create(is, false);
+          StructClass clazz = StructClass.create(is, false);
           this.qualifiedName = clazz.qualifiedName;
         }
       } else {
@@ -50,9 +51,9 @@ class SingleFileContextSource implements IContextSource {
     if (this.contents == null) {
       return Entries.EMPTY;
     } else if (this.file.getName().endsWith(CLASS_SUFFIX)) {
-      return new Entries(List.of(Entry.atBase(this.qualifiedName)), List.of(), List.of());
+      return new Entries(MoreList.of(Entry.atBase(this.qualifiedName)), MoreList.of(), MoreList.of());
     } else {
-      return new Entries(List.of(), List.of(), List.of(Entry.atBase(this.file.getName())));
+      return new Entries(MoreList.of(), MoreList.of(), MoreList.of(Entry.atBase(this.file.getName())));
     }
   }
 

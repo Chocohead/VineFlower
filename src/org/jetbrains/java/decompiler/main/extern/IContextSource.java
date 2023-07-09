@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.jetbrains.java.decompiler.util.future.MoreInputStream;
+import org.jetbrains.java.decompiler.util.future.MoreList;
+
 /**
  * A specific type of context unit.
  *
@@ -44,8 +47,8 @@ public interface IContextSource {
     if (is == null)
       return null;
 
-    try (is) {
-      return is.readAllBytes();
+    try (InputStream in = is) {
+      return MoreInputStream.readAllBytes(in);
     }
   }
 
@@ -131,7 +134,7 @@ public interface IContextSource {
    * @param childContexts contexts discovered within this context
    */
   public static final class Entries {
-    public static final Entries EMPTY = new Entries(List.of(), List.of(), List.of(), List.of());
+    public static final Entries EMPTY = new Entries(MoreList.of(), MoreList.of(), MoreList.of(), MoreList.of());
 
     private final List<Entry> classes;
     private final List<String> directories;
@@ -139,15 +142,15 @@ public interface IContextSource {
     private final List<IContextSource> childContexts;
 
     public Entries(List<Entry> classes, List<String> directories, List<Entry> others) {
-      this(classes, directories, others, List.of());
+      this(classes, directories, others, MoreList.of());
     }
 
     public Entries(List<Entry> classes, List<String> directories, List<Entry> others, List<IContextSource> childContexts) {
       // defensive copy
-      this.classes = List.copyOf(classes);
-      this.directories = List.copyOf(directories);
-      this.others = List.copyOf(others);
-      this.childContexts = List.copyOf(childContexts);
+      this.classes = MoreList.copyOf(classes);
+      this.directories = MoreList.copyOf(directories);
+      this.others = MoreList.copyOf(others);
+      this.childContexts = MoreList.copyOf(childContexts);
     }
 
     public List<Entry> classes() {

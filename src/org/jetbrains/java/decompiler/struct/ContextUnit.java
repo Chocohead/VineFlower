@@ -6,6 +6,9 @@ import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
+import org.jetbrains.java.decompiler.util.future.MoreCollectors;
+import org.jetbrains.java.decompiler.util.future.MoreInputStream;
+import org.jetbrains.java.decompiler.util.future.MoreList;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,10 +30,10 @@ public class ContextUnit {
   private final IDecompiledData decompiledData;
 
   private volatile boolean entriesInitialized;
-  private List<String> classEntries = List.of(); // class file or jar/zip entry
-  private List<String> dirEntries = List.of();
-  private List<IContextSource.Entry> otherEntries = List.of();
-  private List<IContextSource> childContexts = List.of();
+  private List<String> classEntries = MoreList.of(); // class file or jar/zip entry
+  private List<String> dirEntries = MoreList.of();
+  private List<IContextSource.Entry> otherEntries = MoreList.of();
+  private List<IContextSource> childContexts = MoreList.of();
 
   public ContextUnit(IContextSource source, boolean own, boolean root, IResultSaver resultSaver, IDecompiledData decompiledData) {
     this.source = source;
@@ -49,14 +52,14 @@ public class ContextUnit {
           this.classEntries = entries.classes().stream()
             .filter(ent -> ent.multirelease() == IContextSource.Entry.BASE_VERSION)
             .map(entry -> entry.basePath())
-            .collect(Collectors.toUnmodifiableList());
+            .collect(MoreCollectors.toUnmodifiableList());
           this.dirEntries = entries.directories();
           boolean includeExtras = !DecompilerContext.getOption(IFernflowerPreferences.SKIP_EXTRA_FILES);
           this.otherEntries = new ArrayList<>();
           for (final IContextSource.Entry entry : entries.others()) {
             if ("fernflower_abstract_parameter_names.txt".equals(entry.basePath())) {
               try (final InputStream is = this.source.getInputStream(entry)) {
-                final byte[] data = is.readAllBytes();
+                final byte[] data = MoreInputStream.readAllBytes(is);
                 DecompilerContext.getStructContext().loadAbstractMetadata(new String(data, StandardCharsets.UTF_8));
               } catch (final IOException ex) {
                 DecompilerContext.getLogger().writeMessage("Failed to load abstract parameter names file", IFernflowerLogger.Severity.ERROR, ex);
@@ -103,9 +106,9 @@ public class ContextUnit {
   public void clear() throws IOException {
     synchronized (this) {
       this.entriesInitialized = false;
-      this.classEntries = List.of();
-      this.dirEntries = List.of();
-      this.otherEntries = List.of();
+      this.classEntries = MoreList.of();
+      this.dirEntries = MoreList.of();
+      this.otherEntries = MoreList.of();
     }
   }
 

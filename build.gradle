@@ -16,8 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 compileJava {
-  sourceCompatibility '11'
-  targetCompatibility '11'
+  release 8
 }
 
 group = 'org.vineflower'
@@ -31,6 +30,8 @@ version = version + (ENV.GITHUB_ACTIONS ? "" : "+local")
 sourceSets {
   main.java.srcDirs 'src'
   test.java.srcDirs 'test'
+  //A few classes need Java 9+ things which can't be replicated on J8
+  src9.java.srcDirs 'src9'
   testDataGroovy.groovy.srcDirs files("testData/src/groovy/")
   testDataKotlin.kotlin.srcDirs files("testData/src/kt/")
   testDataScala.scala.srcDirs files("testData/src/scala")
@@ -44,6 +45,7 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
   testImplementation 'org.hamcrest:hamcrest:2.2'
 
+  src9Implementation sourceSets.main.output
   testDataGroovyImplementation 'org.codehaus.groovy:groovy:3.0.8'
   testDataKotlinImplementation platform('org.jetbrains.kotlin:kotlin-bom')
   testDataKotlinImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
@@ -160,9 +162,19 @@ test {
   jvmArgumentProviders << provider
 }
 
+compileSrc9Java {
+  release 9
+}
+
 jar {
+  //Put the Java 9+ things into the main jar to make it a multi-release jar
+  into('META-INF/versions/9') {
+    from sourceSets.src9.output
+  }
+
   manifest {
     attributes (
+      'Multi-Release': 'true',
       'Main-Class': 'org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler',
       'Implementation-Name': "Vineflower",
       'Implementation-Version': project.version

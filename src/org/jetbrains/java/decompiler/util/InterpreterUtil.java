@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.jetbrains.java.decompiler.util.future.MoreInputStream;
+
 public final class InterpreterUtil {
   public static final boolean IS_WINDOWS = System.getProperty("os.name", "").startsWith("Windows");
 
@@ -22,7 +24,7 @@ public final class InterpreterUtil {
   }
 
   public static void copyStream(InputStream in, OutputStream out) throws IOException {
-    in.transferTo(out);
+    MoreInputStream.transferTo(in, out);
   }
 
   public static byte[] getBytes(ZipFile archive, ZipEntry entry) throws IOException {
@@ -38,7 +40,7 @@ public final class InterpreterUtil {
   }
 
   public static byte[] readBytes(InputStream stream, int length) throws IOException {
-    byte[] bytes = stream.readNBytes(length);
+    byte[] bytes = MoreInputStream.readNBytes(stream, length);
 
     if (bytes.length < length) {
       throw new IOException("premature end of stream");

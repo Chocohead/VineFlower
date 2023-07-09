@@ -9,6 +9,7 @@ import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 import org.jetbrains.java.decompiler.util.JrtFinder;
 import org.jetbrains.java.decompiler.util.ZipFileCache;
+import org.jetbrains.java.decompiler.util.future.MoreMap;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -25,7 +26,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver, AutoCloseable {
-  private static final Map<String, Object> CONSOLE_DEFAULT_OPTIONS = Map.of(
+  private static final Map<String, Object> CONSOLE_DEFAULT_OPTIONS = MoreMap.of(
     IFernflowerPreferences.INCLUDE_JAVA_RUNTIME, JrtFinder.CURRENT
   );
 
