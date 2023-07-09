@@ -160,6 +160,9 @@ test {
       provider.launchers.put(k, v)
   }
   jvmArgumentProviders << provider
+
+  dependsOn jar
+  classpath = sourceSets.test.output + configurations.testRuntimeClasspath + files(jar.archiveFile)
 }
 
 compileSrc9Java {
