@@ -16,7 +16,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 compileJava {
-  options.release 8
+  options.release = 8
 }
 
 group = 'org.vineflower'
@@ -163,7 +163,7 @@ test {
 }
 
 compileSrc9Java {
-  options.release 9
+  options.release = 9
 }
 
 jar {
