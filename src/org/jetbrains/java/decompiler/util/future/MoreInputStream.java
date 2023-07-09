@@ -9,10 +9,10 @@ public class MoreInputStream {
 	public static byte[] readNBytes(InputStream in, int target) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-		int n;
-		for (byte[] buffer = new byte[Math.min(target, 4096)]; target > 0 && (n = in.read(buffer, 0, Math.min(target, 4096))) != -1;) {
-            out.write(buffer, 0, Math.min(n, target));
-            target -= n;
+		int n, left = target;
+		for (byte[] buffer = new byte[Math.min(target, 4096)]; left > 0 && (n = in.read(buffer, 0, Math.min(left, 4096))) != -1;) {
+            out.write(buffer, 0, Math.min(n, left));
+            left -= n;
         }
 
 		assert out.size() <= target;
