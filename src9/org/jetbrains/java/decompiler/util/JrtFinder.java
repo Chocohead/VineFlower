@@ -8,6 +8,12 @@ import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructContext;
 import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
 import org.jetbrains.java.decompiler.struct.attr.StructModuleAttribute;
+import org.jetbrains.java.decompiler.struct.attr.StructModuleAttribute.ExportsEntry;
+import org.jetbrains.java.decompiler.struct.attr.StructModuleAttribute.OpensEntry;
+import org.jetbrains.java.decompiler.struct.attr.StructModuleAttribute.ProvidesEntry;
+import org.jetbrains.java.decompiler.struct.attr.StructModuleAttribute.RequiresEntry;
+import org.jetbrains.java.decompiler.util.future.MoreCollectors;
+import org.jetbrains.java.decompiler.util.future.MoreSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +89,7 @@ public class JrtFinder {
 
     @Override
     protected Stream<String> entryNames() throws IOException {
-      try (final var dir = Files.walk(this.module)) {
+      try (final Stream<Path> dir = Files.walk(this.module)) {
         return dir.map(it -> this.module.relativize(it).toString()).collect(Collectors.toList()).stream();
       }
     }
@@ -94,7 +100,7 @@ public class JrtFinder {
     private final FileSystem jrtFileSystem;
 
     public JavaRuntimeContextSource(final File javaHome) throws IOException {
-      final var url = URI.create("jrt:/");
+      final URI url = URI.create("jrt:/");
       if (javaHome == null) {
         this.identifier = "current";
         this.jrtFileSystem = FileSystems.newFileSystem(url, Map.of());
@@ -110,16 +116,16 @@ public class JrtFinder {
     }
 
     private static ModuleDescriptor asDescriptor(StructModuleAttribute moduleAttr) {
-      var mods = EnumSet.noneOf(ModuleDescriptor.Modifier.class);
+      Set<ModuleDescriptor.Modifier> mods = EnumSet.noneOf(ModuleDescriptor.Modifier.class);
       if ((moduleAttr.moduleFlags & CodeConstants.ACC_OPEN) != 0) mods.add(ModuleDescriptor.Modifier.OPEN);
       if ((moduleAttr.moduleFlags & CodeConstants.ACC_SYNTHETIC) != 0) mods.add(ModuleDescriptor.Modifier.SYNTHETIC);
       if ((moduleAttr.moduleFlags & CodeConstants.ACC_MANDATED) != 0) mods.add(ModuleDescriptor.Modifier.MANDATED);
 
-      var builder = ModuleDescriptor.newModule(moduleAttr.moduleName, mods);
+      ModuleDescriptor.Builder builder = ModuleDescriptor.newModule(moduleAttr.moduleName, mods);
       if (moduleAttr.moduleVersion != null) builder.version(moduleAttr.moduleVersion);
 
-      for (final var requires : moduleAttr.requires) {
-        var rMods = EnumSet.noneOf(ModuleDescriptor.Requires.Modifier.class);
+      for (final RequiresEntry requires : moduleAttr.requires) {
+        Set<ModuleDescriptor.Requires.Modifier> rMods = EnumSet.noneOf(ModuleDescriptor.Requires.Modifier.class);
         if ((requires.flags & CodeConstants.ACC_TRANSITIVE) != 0) rMods.add(ModuleDescriptor.Requires.Modifier.TRANSITIVE);
         if ((requires.flags & CodeConstants.ACC_STATIC_PHASE) != 0) rMods.add(ModuleDescriptor.Requires.Modifier.STATIC);
         if ((requires.flags & CodeConstants.ACC_SYNTHETIC) != 0) rMods.add(ModuleDescriptor.Requires.Modifier.SYNTHETIC);
@@ -131,37 +137,37 @@ public class JrtFinder {
         }
       }
 
-      for (final var exports : moduleAttr.exports) {
-        var eMods = EnumSet.noneOf(ModuleDescriptor.Exports.Modifier.class);
+      for (final ExportsEntry exports : moduleAttr.exports) {
+        Set<ModuleDescriptor.Exports.Modifier> eMods = EnumSet.noneOf(ModuleDescriptor.Exports.Modifier.class);
         if ((exports.flags & CodeConstants.ACC_SYNTHETIC) != 0) eMods.add(ModuleDescriptor.Exports.Modifier.SYNTHETIC);
         if ((exports.flags & CodeConstants.ACC_MANDATED) != 0) eMods.add(ModuleDescriptor.Exports.Modifier.MANDATED);
         if (exports.exportToModules.isEmpty()) {
           builder.exports(eMods, exports.packageName.replace('/', '.'));
         } else {
-          builder.exports(eMods, exports.packageName.replace('/', '.'), Set.copyOf(exports.exportToModules));
+          builder.exports(eMods, exports.packageName.replace('/', '.'), MoreSet.copyOf(exports.exportToModules));
         }
       }
 
-      for (final var opens : moduleAttr.opens) {
-        var oMods = EnumSet.noneOf(ModuleDescriptor.Opens.Modifier.class);
+      for (final OpensEntry opens : moduleAttr.opens) {
+        Set<ModuleDescriptor.Opens.Modifier> oMods = EnumSet.noneOf(ModuleDescriptor.Opens.Modifier.class);
         if ((opens.flags & CodeConstants.ACC_SYNTHETIC) != 0) oMods.add(ModuleDescriptor.Opens.Modifier.SYNTHETIC);
         if ((opens.flags & CodeConstants.ACC_MANDATED) != 0) oMods.add(ModuleDescriptor.Opens.Modifier.MANDATED);
 
         if (opens.opensToModules.isEmpty()) {
           builder.opens(oMods, opens.packageName.replace('/', '.'));
         } else {
-          builder.opens(oMods, opens.packageName.replace('/', '.'), Set.copyOf(opens.opensToModules));
+          builder.opens(oMods, opens.packageName.replace('/', '.'), MoreSet.copyOf(opens.opensToModules));
         }
       }
 
-      for (final var uses : moduleAttr.uses) {
+      for (final String uses : moduleAttr.uses) {
         builder.uses(uses.replace('/', '.'));
       }
 
-      for (final var provides : moduleAttr.provides) {
+      for (final ProvidesEntry provides : moduleAttr.provides) {
         builder.provides(
           provides.interfaceName.replace('/', '.'),
-          provides.implementationNames.stream().map(name -> name.replace('/', '.')).collect(Collectors.toUnmodifiableList())
+          provides.implementationNames.stream().map(name -> name.replace('/', '.')).collect(MoreCollectors.toUnmodifiableList())
         );
       }
 
@@ -177,8 +183,8 @@ public class JrtFinder {
       for (final Path module : modules) {
         ModuleDescriptor descriptor;
         try (final InputStream is = Files.newInputStream(module.resolve("module-info.class"))) {
-          var clazz = StructClass.create(new DataInputFullStream(is.readAllBytes()), false);
-          var moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
+          StructClass clazz = StructClass.create(new DataInputFullStream(is.readAllBytes()), false);
+          StructModuleAttribute moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
           if (moduleAttr == null) continue;
 
           descriptor = asDescriptor(moduleAttr);
