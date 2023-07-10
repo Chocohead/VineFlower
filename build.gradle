@@ -256,6 +256,10 @@ nexusPublishing {
   }
 }
 
+tasks.withType(Sign) {
+  onlyIf { ENV.SIGNING_KEY != null && ENV.SIGNING_KEY_PASSPHRASE != null }
+}
+
 signing {
   def signingKey = ENV.SIGNING_KEY
   def signingPassword = ENV.SIGNING_KEY_PASSPHRASE
