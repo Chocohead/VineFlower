@@ -22,7 +22,7 @@ compileJava {
 group = 'org.vineflower'
 archivesBaseName = 'vineflower'
 
-version = '1.9.1'
+version = '1.9.3'
 
 def ENV = System.getenv()
 version = version + (ENV.GITHUB_ACTIONS ? "" : "+local")
@@ -261,9 +261,11 @@ tasks.withType(Sign) {
 }
 
 signing {
-  def signingKey = ENV.SIGNING_KEY
-  def signingPassword = ENV.SIGNING_KEY_PASSPHRASE
+  if (ENV.SIGNING_KEY) {
+    def signingKey = ENV.SIGNING_KEY
+    def signingPassword = ENV.SIGNING_KEY_PASSPHRASE
 
-  useInMemoryPgpKeys(signingKey, signingPassword)
-  sign publishing.publications.mavenJava
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenJava
+  }
 }

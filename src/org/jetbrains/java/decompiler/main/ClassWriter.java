@@ -101,6 +101,13 @@ public class ClassWriter implements StatementWriter {
         EnumProcessor.clearEnum(wrapper);
       }
 
+      // FIXME: when 1.10 merge, this needs to be removed
+      for (MethodWrapper mw : wrapper.getMethods()) {
+        if (mw.root != null) {
+          mw.varproc.rerunClashing(mw.root);
+        }
+      }
+
       if (DecompilerContext.getOption(IFernflowerPreferences.DECOMPILE_ASSERTIONS)) {
         AssertProcessor.buildAssertions(node);
       }
@@ -108,23 +115,27 @@ public class ClassWriter implements StatementWriter {
       DecompilerContext.getLogger().writeMessage("Class " + node.simpleName + " couldn't be written.",
         IFernflowerLogger.Severity.WARN,
         t);
-      buffer.append("// $VF: Couldn't be decompiled");
-      buffer.appendLineSeparator();
-      if (DecompilerContext.getOption(IFernflowerPreferences.DUMP_EXCEPTION_ON_ERROR)) {
-        List<String> lines = new ArrayList<>();
-        lines.addAll(ClassWriter.getErrorComment());
-        collectErrorLines(t, lines);
-        for (String line : lines) {
-          buffer.append("//");
-          if (!line.isEmpty()) buffer.append(' ').append(line);
-          buffer.appendLineSeparator();
-        }
-      }
+      writeException(buffer, t);
 
       return false;
     }
 
     return true;
+  }
+
+  public static void writeException(TextBuffer buffer, Throwable t) {
+    buffer.append("// $VF: Couldn't be decompiled");
+    buffer.appendLineSeparator();
+    if (DecompilerContext.getOption(IFernflowerPreferences.DUMP_EXCEPTION_ON_ERROR)) {
+      List<String> lines = new ArrayList<>();
+      lines.addAll(ClassWriter.getErrorComment());
+      collectErrorLines(t, lines);
+      for (String line : lines) {
+        buffer.append("//");
+        if (!line.isEmpty()) buffer.append(' ').append(line);
+        buffer.appendLineSeparator();
+      }
+    }
   }
 
   public void classLambdaToJava(ClassNode node, TextBuffer buffer, Exprent method_object, int indent) {
@@ -189,9 +200,14 @@ public class ClassWriter implements StatementWriter {
               if (!firstParameter) {
                 buffer.append(", ");
               }
+              VarType type = md_content.params[i];
 
               String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
-              buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
+              if (parameterName == null) {
+                parameterName = "param" + index; // null iff decompiled with errors
+              }
+              parameterName = methodWrapper.methodStruct.getVariableNamer().renameParameter(mt.getAccessFlags(), ExprProcessor.getCastTypeName(type), parameterName, index);
+              buffer.append(parameterName);
 
               firstParameter = false;
             }
@@ -835,7 +851,11 @@ public class ClassWriter implements StatementWriter {
             buffer.append(" ");
 
             String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
-            buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
+            if (parameterName == null) {
+              parameterName = "param" + index; // null iff decompiled with errors
+            }
+            parameterName = methodWrapper.methodStruct.getVariableNamer().renameParameter(mt.getAccessFlags(), typeName, parameterName, index);
+            buffer.append(parameterName);
 
             firstParameter = false;
           }
@@ -1104,11 +1124,11 @@ public class ClassWriter implements StatementWriter {
               parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
             }
 
-            if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0) {
-              String newParameterName = methodWrapper.methodStruct.getVariableNamer().renameAbstractParameter(parameterName, index);
-              parameterName = !newParameterName.equals(parameterName) ? newParameterName : DecompilerContext.getStructContext().renameAbstractParameter(methodWrapper.methodStruct.getClassQualifiedName(), mt.getName(), mt.getDescriptor(), index - (((flags & CodeConstants.ACC_STATIC) == 0) ? 1 : 0), parameterName);
-
+            String newParameterName = methodWrapper.methodStruct.getVariableNamer().renameParameter(flags, typeName, parameterName, index);
+            if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0 && Objects.equals(newParameterName, parameterName)) {
+              newParameterName = DecompilerContext.getStructContext().renameAbstractParameter(methodWrapper.methodStruct.getClassQualifiedName(), mt.getName(), mt.getDescriptor(), index - (((flags & CodeConstants.ACC_STATIC) == 0) ? 1 : 0), parameterName);
             }
+            parameterName = newParameterName;
 
             buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
 
