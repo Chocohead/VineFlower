@@ -3,6 +3,7 @@ package org.jetbrains.java.decompiler.main.decompiler;
 
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.Fernflower;
+import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
@@ -69,10 +70,17 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
       return;
     }
 
+    if (Arrays.stream(args).anyMatch(arg -> arg.equals("--list-plugins"))) {
+      ConsoleHelp.printPlugins();
+      return;
+    }
+
     if (args.length < 1) {
       System.out.println(
-        "Usage: java -jar vineflower.jar [-<option>=<value>]* [<source>]+ <destination>\n" +
-        "Example: java -jar vineflower.jar -dgs=true c:\\my\\source\\ c:\\my.jar d:\\decompiled\\");
+        "=== Vineflower Decompiler " + version() + " ===\n\n" +
+        "Usage: java -jar vineflower.jar --<option>=<value>... <source>... <destination>\n" +
+        "Example: java -jar vineflower.jar --decompile-generics ./MyJar.jar ./out_files\n\n" +
+        "Use -h or --help for more information.");
       return;
     }
 
@@ -111,18 +119,12 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
           continue;
       }
 
-      if (isOption && arg.length() > 5 && arg.charAt(0) == '-' && arg.charAt(4) == '=') {
-        String value = arg.substring(5);
-        if ("true".equalsIgnoreCase(value)) {
-          value = "1";
-        }
-        else if ("false".equalsIgnoreCase(value)) {
-          value = "0";
-        }
-
-        mapOptions.put(arg.substring(1, 4), value);
+      boolean parsed = false;
+      if (isOption && arg.length() > 5 && arg.startsWith("-")) {
+        parsed = OptionParser.parse(arg, mapOptions);
       }
-      else {
+
+      if (!parsed) {
         nonOption++;
         // Don't process this, as it is the output
         if (nonOption > 1 && i == args.length - 1) {
@@ -131,13 +133,13 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
 
         isOption = false;
 
-        if (arg.startsWith("-e=")) {
-          addPath(libraries, arg.substring(3));
-        }
-        else if (arg.startsWith("-only=")) {
-          whitelist.add(arg.substring(6));
-        }
-        else {
+        if (arg.equals("-s") || arg.equals("--silent")) {
+          mapOptions.put(IFernflowerPreferences.LOG_LEVEL, "error");
+        } else if (arg.startsWith("-e=") || arg.startsWith("--add-external=")) {
+          addPath(libraries, arg.substring(arg.indexOf('=') + 1));
+        } else if (arg.startsWith("-only=") || arg.startsWith("--only=")) {
+          whitelist.add(arg.substring(arg.indexOf('=') + 1));
+        } else {
           addPath(sources, arg);
         }
       }
@@ -186,7 +188,11 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
       decompiler.addWhitelist(prefix);
     }
 
-    decompiler.decompileContext();
+    try {
+      decompiler.decompileContext();
+    } catch (CancelationManager.CanceledException e) {
+      System.out.println("Decompilation canceled");
+    }
   }
 
   @SuppressWarnings("UseOfSystemOutOrSystemErr")
@@ -228,6 +234,10 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
     engine.addLibrary(library);
   }
 
+  public void addLibrary(IContextSource source) {
+    engine.addLibrary(source);
+  }
+
   public void addWhitelist(String prefix) {
     engine.addWhitelist(prefix);
   }
@@ -246,6 +256,7 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
   // *******************************************************************
 
   // @Override
+  @Deprecated
   public byte[] getBytecode(String externalPath, String internalPath) throws IOException { // UNUSED
     if (internalPath == null) {
       File file = new File(externalPath);
@@ -395,7 +406,11 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
     String file = new File(getAbsolutePath(path), archiveName).getPath();
     try {
       mapArchiveEntries.remove(file);
-      mapArchiveStreams.remove(file).close();
+      ZipOutputStream removed = mapArchiveStreams.remove(file);
+      // Can be null if saving out of directory context
+      if (removed != null) {
+        removed.close();
+      }
     }
     catch (IOException ex) {
       DecompilerContext.getLogger().writeMessage("Cannot close " + file, IFernflowerLogger.Severity.WARN);
@@ -422,5 +437,10 @@ public class ConsoleDecompiler implements /* IBytecodeProvider, */ IResultSaver,
     public Function<File, IResultSaver> getSaver() {
       return saver;
     }
+  }
+
+  public static String version() {
+    String ver = ConsoleDecompiler.class.getPackage().getImplementationVersion();
+    return ver == null ? "<UNK>" : ver;
   }
 }

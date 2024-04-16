@@ -11,8 +11,6 @@ import java.util.zip.ZipFile;
 import org.jetbrains.java.decompiler.util.future.MoreInputStream;
 
 public final class InterpreterUtil {
-  public static final boolean IS_WINDOWS = System.getProperty("os.name", "").startsWith("Windows");
-
   public static final int[] EMPTY_INT_ARRAY = new int[0];
 
   private static final int BUFFER_SIZE = 16 * 1024;

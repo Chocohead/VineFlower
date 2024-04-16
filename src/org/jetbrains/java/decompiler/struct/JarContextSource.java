@@ -2,6 +2,7 @@
 package org.jetbrains.java.decompiler.struct;
 
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.decompiler.SingleFileSaver;
 import org.jetbrains.java.decompiler.main.extern.IBytecodeProvider;
 import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
@@ -20,14 +21,12 @@ import java.util.zip.ZipFile;
 import static java.util.Objects.requireNonNull;
 
 final class JarContextSource implements IContextSource, AutoCloseable {
-  private static final String MANIFEST = "META-INF/MANIFEST.MF";
 
   @SuppressWarnings("deprecation")
   private final IBytecodeProvider legacyProvider;
   private final String relativePath; // used for nested contexts from DirectoryContextSource
   private final File jarFile;
   private final ZipFile file;
-  private final boolean isZip;
 
   @SuppressWarnings("deprecation")
   JarContextSource(final IBytecodeProvider legacyProvider, final File archive) throws IOException {
@@ -40,7 +39,6 @@ final class JarContextSource implements IContextSource, AutoCloseable {
     this.relativePath = relativePath;
     this.jarFile = requireNonNull(archive, "archive");
     this.file = new ZipFile(archive);
-    this.isZip = this.jarFile.getName().endsWith("zip");
   }
 
   @Override
@@ -63,12 +61,12 @@ final class JarContextSource implements IContextSource, AutoCloseable {
       if (!entry.isDirectory()) {
         if (name.endsWith(CLASS_SUFFIX)) {
           classes.add(Entry.parse(name.substring(0, name.length() - CLASS_SUFFIX.length())));
-        }
-        else if (this.isZip || !name.equalsIgnoreCase(MANIFEST)) {
+        } else {
           others.add(Entry.parse(name));
         }
       }
     }
+
     return new Entries(classes, MoreList.copyOf(directories), others, MoreList.of());
   }
 
@@ -102,7 +100,7 @@ final class JarContextSource implements IContextSource, AutoCloseable {
     return new IOutputSink() {
       @Override
       public void begin() {
-        final ZipEntry potentialManifest = file.getEntry(MANIFEST);
+        final ZipEntry potentialManifest = file.getEntry(SingleFileSaver.MANIFEST);
         Manifest manifest = null;
         if (potentialManifest != null) {
           try (final InputStream is = file.getInputStream(potentialManifest)) {
