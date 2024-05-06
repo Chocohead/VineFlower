@@ -10,6 +10,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.flow.DirectGraph;
 import org.jetbrains.java.decompiler.modules.decompiler.flow.DirectNode;
 import org.jetbrains.java.decompiler.modules.decompiler.flow.FlattenStatementsHelper;
 import org.jetbrains.java.decompiler.struct.match.MatchEngine;
+import org.jetbrains.java.decompiler.util.future.MoreList;
 import org.vineflower.kotlin.expr.KFunctionExprent;
 
 import java.util.List;
@@ -120,7 +121,7 @@ public class ResugarKotlinMethodsPass implements Pass {
     }
 
     if (EQUAL_INTRINSIC.match(ex)) {
-      return new ResugarRes(new KFunctionExprent(FunctionExprent.FunctionType.EQ, List.of(
+      return new ResugarRes(new KFunctionExprent(FunctionExprent.FunctionType.EQ, MoreList.of(
         (Exprent) EQUAL_INTRINSIC.getVariableValue("$lhs$"), (Exprent) EQUAL_INTRINSIC.getVariableValue("$rhs$")
       ), null), false);
     }
@@ -132,14 +133,14 @@ public class ResugarKotlinMethodsPass implements Pass {
       }
 
       if (innerVal instanceof VarExprent && TERNARY_NULL_CHECK.getVariableValue("$x$").equals(innerVal)) {
-        return new ResugarRes(new KFunctionExprent(KFunctionExprent.KFunctionType.IF_NULL, List.of(
+        return new ResugarRes(new KFunctionExprent(KFunctionExprent.KFunctionType.IF_NULL, MoreList.of(
           (Exprent) TERNARY_NULL_CHECK.getVariableValue("$x$"), (Exprent) TERNARY_NULL_CHECK.getVariableValue("$y$")
         ), null), false);
       }
     }
 
     if (GET_KCLASS.match(ex)) {
-      return new ResugarRes(new KFunctionExprent(KFunctionExprent.KFunctionType.GET_KCLASS, List.of(
+      return new ResugarRes(new KFunctionExprent(KFunctionExprent.KFunctionType.GET_KCLASS, MoreList.of(
         (Exprent) GET_KCLASS.getVariableValue("$class$")
       ), null), false);
     }

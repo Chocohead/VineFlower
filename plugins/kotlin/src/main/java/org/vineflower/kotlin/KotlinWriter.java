@@ -513,7 +513,7 @@ public class KotlinWriter implements StatementWriter {
       KProperty prop = propertyData.properties.stream()
         .filter(p -> p.name.equals(param.name))
         .findFirst()
-        .orElseThrow();
+        .get();
 
       nonParameterProperties.remove(prop);
 

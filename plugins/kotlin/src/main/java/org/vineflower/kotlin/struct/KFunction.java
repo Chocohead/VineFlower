@@ -15,6 +15,8 @@ import org.jetbrains.java.decompiler.struct.StructMethod;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 import org.jetbrains.java.decompiler.util.TextBuffer;
+import org.jetbrains.java.decompiler.util.future.MoreList;
+import org.jetbrains.java.decompiler.util.future.MoreMap;
 import org.vineflower.kotlin.KotlinDecompilationContext;
 import org.vineflower.kotlin.KotlinOptions;
 import org.vineflower.kotlin.KotlinWriter;
@@ -81,7 +83,7 @@ public class KFunction {
     List<ProtoBuf.Function> protoFunctions;
 
     KotlinDecompilationContext.KotlinType type = KotlinDecompilationContext.getCurrentType();
-    if (type == null) return Map.of();
+    if (type == null) return MoreMap.of();
 
     switch (type) {
       case CLASS:
@@ -168,7 +170,7 @@ public class KFunction {
         && flags.visibility != ProtoBuf.Visibility.LOCAL
         && KotlinWriter.searchForMethod(struct, method.methodStruct.getName(), method.desc(), false);
 
-      KContract contract = function.hasContract() ? KContract.from(function.getContract(), List.of(parameters), resolver) : null;
+      KContract contract = function.hasContract() ? KContract.from(function.getContract(), MoreList.of(parameters), resolver) : null;
 
       functions.put(method.methodStruct, new KFunction(name, parameters, typeParameters, returnType, flags, contextReceiverTypes, method, receiverType, contract, knownOverride, node));
     }

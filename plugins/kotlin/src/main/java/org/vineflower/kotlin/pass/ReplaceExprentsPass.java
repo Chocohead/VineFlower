@@ -6,6 +6,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.exps.*;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.IfStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
+import org.jetbrains.java.decompiler.util.future.MoreList;
 import org.vineflower.kotlin.util.KUtils;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class ReplaceExprentsPass implements Pass {
       res |= replace(st);
     }
 
-    List<Exprent> exprs = List.of();
+    List<Exprent> exprs = MoreList.of();
     if (stat instanceof BasicBlockStatement) {
       exprs = stat.getExprents();
     } else if (stat instanceof IfStatement) {

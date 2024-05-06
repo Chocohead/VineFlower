@@ -3,6 +3,8 @@ package org.vineflower.kotlin.util;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
+import org.jetbrains.java.decompiler.util.future.MoreMap;
+import org.jetbrains.java.decompiler.util.future.MoreString;
 
 import java.util.List;
 import java.util.Map;
@@ -14,12 +16,12 @@ public final class KTypes {
   private static final int MAX_KOTLIN_FUNCTION_ARITY = 22;
 
   private static final Pattern GENERICS_PATTERN = Pattern.compile("(.+)<(.+)>");
-  private static final Map<String, String> JAVA_CLASS_TRANSLATIONS = Map.of(
+  private static final Map<String, String> JAVA_CLASS_TRANSLATIONS = MoreMap.of(
     "java/lang/Integer", "Int",
     "java/lang/Object", "Any"
   );
   
-  private static final Map<String, String> JAVA_GENERIC_TRANSLATIONS = Map.of(
+  private static final Map<String, String> JAVA_GENERIC_TRANSLATIONS = MoreMap.of(
     "java/util/Map", "MutableMap",
     "java/util/HashMap", "HashMap",
     "java/util/List", "MutableList",
@@ -32,45 +34,45 @@ public final class KTypes {
     "java/lang/Iterable", "MutableIterable"
   );
   
-  public static final Map<String, String> KOTLIN_TO_JAVA_LANG = Map.ofEntries(
-    Map.entry("kotlin/Any", "java/lang/Object"),
-    Map.entry("kotlin/Boolean", "java/lang/Boolean"),
-    Map.entry("kotlin/Byte", "java/lang/Byte"),
-    Map.entry("kotlin/Char", "java/lang/Character"),
-    Map.entry("kotlin/CharSequence", "java/lang/CharSequence"),
-    Map.entry("kotlin/Comparable", "java/lang/Comparable"),
-    Map.entry("kotlin/Double", "java/lang/Double"),
-    Map.entry("kotlin/Enum", "java/lang/Enum"),
-    Map.entry("kotlin/Float", "java/lang/Float"),
-    Map.entry("kotlin/Int", "java/lang/Integer"),
-    Map.entry("kotlin/Long", "java/lang/Long"),
-    Map.entry("kotlin/Nothing", "java/lang/Void"),
-    Map.entry("kotlin/Number", "java/lang/Number"),
-    Map.entry("kotlin/Short", "java/lang/Short"),
-    Map.entry("kotlin/String", "java/lang/String"),
-    Map.entry("kotlin/Throwable", "java/lang/Throwable"),
-    Map.entry("kotlin/collections/MutableIterable", "java/lang/Iterable"),
-    Map.entry("kotlin/collections/Iterable", "java/lang/Iterable")
+  public static final Map<String, String> KOTLIN_TO_JAVA_LANG = MoreMap.ofEntries(
+    MoreMap.entry("kotlin/Any", "java/lang/Object"),
+    MoreMap.entry("kotlin/Boolean", "java/lang/Boolean"),
+    MoreMap.entry("kotlin/Byte", "java/lang/Byte"),
+    MoreMap.entry("kotlin/Char", "java/lang/Character"),
+    MoreMap.entry("kotlin/CharSequence", "java/lang/CharSequence"),
+    MoreMap.entry("kotlin/Comparable", "java/lang/Comparable"),
+    MoreMap.entry("kotlin/Double", "java/lang/Double"),
+    MoreMap.entry("kotlin/Enum", "java/lang/Enum"),
+    MoreMap.entry("kotlin/Float", "java/lang/Float"),
+    MoreMap.entry("kotlin/Int", "java/lang/Integer"),
+    MoreMap.entry("kotlin/Long", "java/lang/Long"),
+    MoreMap.entry("kotlin/Nothing", "java/lang/Void"),
+    MoreMap.entry("kotlin/Number", "java/lang/Number"),
+    MoreMap.entry("kotlin/Short", "java/lang/Short"),
+    MoreMap.entry("kotlin/String", "java/lang/String"),
+    MoreMap.entry("kotlin/Throwable", "java/lang/Throwable"),
+    MoreMap.entry("kotlin/collections/MutableIterable", "java/lang/Iterable"),
+    MoreMap.entry("kotlin/collections/Iterable", "java/lang/Iterable")
   );
 
-  public static final Map<String, String> KOTLIN_TO_JAVA_UTIL = Map.ofEntries(
-    Map.entry("kotlin/collections/MutableCollection", "java/util/Collection"),
-    Map.entry("kotlin/collections/MutableMap", "java/util/Map"),
-    Map.entry("kotlin/collections/MutableList", "java/util/List"),
-    Map.entry("kotlin/collections/MutableSet", "java/util/Set"),
-    Map.entry("kotlin/collections/MutableIterator", "java/util/Iterator"),
-    Map.entry("kotlin/collections/MutableListIterator", "java/util/ListIterator"),
-    Map.entry("kotlin/collections/MutableMap$MutableEntry", "java/util/Map$Entry"),
-    Map.entry("kotlin/collections/Collection", "java/util/Collection"),
-    Map.entry("kotlin/collections/Map", "java/util/Map"),
-    Map.entry("kotlin/collections/List", "java/util/List"),
-    Map.entry("kotlin/collections/ListIterator", "java/util/ListIterator"),
-    Map.entry("kotlin/collections/Set", "java/util/Set"),
-    Map.entry("kotlin/collections/Iterator", "java/util/Iterator"),
-    Map.entry("kotlin/collections/Map$Entry", "java/util/Map$Entry")
+  public static final Map<String, String> KOTLIN_TO_JAVA_UTIL = MoreMap.ofEntries(
+    MoreMap.entry("kotlin/collections/MutableCollection", "java/util/Collection"),
+    MoreMap.entry("kotlin/collections/MutableMap", "java/util/Map"),
+    MoreMap.entry("kotlin/collections/MutableList", "java/util/List"),
+    MoreMap.entry("kotlin/collections/MutableSet", "java/util/Set"),
+    MoreMap.entry("kotlin/collections/MutableIterator", "java/util/Iterator"),
+    MoreMap.entry("kotlin/collections/MutableListIterator", "java/util/ListIterator"),
+    MoreMap.entry("kotlin/collections/MutableMap$MutableEntry", "java/util/Map$Entry"),
+    MoreMap.entry("kotlin/collections/Collection", "java/util/Collection"),
+    MoreMap.entry("kotlin/collections/Map", "java/util/Map"),
+    MoreMap.entry("kotlin/collections/List", "java/util/List"),
+    MoreMap.entry("kotlin/collections/ListIterator", "java/util/ListIterator"),
+    MoreMap.entry("kotlin/collections/Set", "java/util/Set"),
+    MoreMap.entry("kotlin/collections/Iterator", "java/util/Iterator"),
+    MoreMap.entry("kotlin/collections/Map$Entry", "java/util/Map$Entry")
   );
 
-  private static final Map<String, String> KOTLIN_PRIMITIVE_TYPES = Map.of(
+  private static final Map<String, String> KOTLIN_PRIMITIVE_TYPES = MoreMap.of(
     "kotlin/Int", "I",
     "kotlin/Long", "J",
     "kotlin/Short", "S",
@@ -162,7 +164,7 @@ public final class KTypes {
 
       return mapJavaTypeToKotlin(s);
     }
-    return "Array<".repeat(type.arrayDim) + typeStr + ">".repeat(type.arrayDim);
+    return MoreString.repeat("Array<", type.arrayDim) + typeStr + MoreString.repeat(">", type.arrayDim);
   }
 
   private static String mapJavaTypeToKotlin(String type) {

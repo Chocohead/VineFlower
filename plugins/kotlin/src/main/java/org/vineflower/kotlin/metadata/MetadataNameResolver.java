@@ -4,6 +4,8 @@ import kotlinx.metadata.internal.metadata.jvm.JvmProtoBuf;
 
 import java.util.*;
 
+import org.jetbrains.java.decompiler.util.future.MoreList;
+
 public class MetadataNameResolver {
   private final JvmProtoBuf.StringTableTypes types;
   private final String[] strings;
@@ -54,7 +56,7 @@ public class MetadataNameResolver {
       }
     }
 
-    var operation = record.getOperation() == null ? JvmProtoBuf.StringTableTypes.Record.Operation.NONE : record.getOperation();
+    JvmProtoBuf.StringTableTypes.Record.Operation operation = record.getOperation() == null ? JvmProtoBuf.StringTableTypes.Record.Operation.NONE : record.getOperation();
     switch (operation) {
       case INTERNAL_TO_CLASS_ID:
         string = string.replace('$', '.');
@@ -72,7 +74,7 @@ public class MetadataNameResolver {
   }
   
   private static Map<Integer, String> buildPredefined() {
-    List<String> strings = List.of(
+    List<String> strings = MoreList.of(
       "kotlin/Any",
       "kotlin/Nothing",
       "kotlin/Unit",
