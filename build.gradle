@@ -68,6 +68,8 @@ sourceSets {
   test.java.srcDirs 'test'
   //A few classes need Java 9+ things which can't be replicated on J8
   src9.java.srcDirs 'src9'
+  src10.java.srcDirs 'src10'
+  src11.java.srcDirs 'src11'
   testFixtures.java.srcDirs 'testFixtures'
   testDataGroovy.groovy.srcDirs files("testData/src/groovy/")
   testDataKotlin.kotlin.srcDirs files("testData/src/kt/")
@@ -82,6 +84,11 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params:${project.junit_bom}")
 
   src9Implementation sourceSets.main.output
+  src10Implementation sourceSets.main.output
+  src10Implementation sourceSets.src9.output
+  src11Implementation sourceSets.main.output
+  src11Implementation sourceSets.src9.output
+  src11Implementation sourceSets.src10.output
   testImplementation("org.hamcrest:hamcrest:${project.hamcrest}")
 
   testFixturesImplementation("org.junit.jupiter:junit-jupiter-params:${project.junit_bom}")
@@ -197,6 +204,12 @@ test {
 compileSrc9Java {
   options.release = 9
 }
+compileSrc10Java {
+  options.release = 10
+}
+compileSrc11Java {
+  options.release = 11
+}
 
 jar {
   archiveClassifier = "slim"
@@ -205,6 +218,12 @@ jar {
   //Put the Java 9+ things into the main jar to make it a multi-release jar
   into('META-INF/versions/9') {
     from sourceSets.src9.output
+  }
+  into('META-INF/versions/10') {
+    from sourceSets.src10.output
+  }
+  into('META-INF/versions/11') {
+    from sourceSets.src11.output
   }
 
   manifest {
@@ -253,6 +272,12 @@ def allJar = tasks.register('allJar', Jar) {allJar ->
 
   into('META-INF/versions/9') {
     from sourceSets.src9.output
+  }
+  into('META-INF/versions/10') {
+    from sourceSets.src10.output
+  }
+  into('META-INF/versions/11') {
+    from sourceSets.src11.output
   }
 
   manifest {
