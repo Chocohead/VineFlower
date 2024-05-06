@@ -22,9 +22,9 @@ import static org.jetbrains.java.decompiler.modules.decompiler.sforms.VarMapHold
 
 public abstract class SFormsConstructor {
 
-  @Deprecated(forRemoval = true)
+  @Deprecated
   public final boolean trackFieldVars;
-  @Deprecated(forRemoval = true)
+  @Deprecated
   public final boolean trackDirectAssignments;
 
 

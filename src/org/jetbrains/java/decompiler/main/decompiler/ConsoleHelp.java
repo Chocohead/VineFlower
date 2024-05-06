@@ -5,9 +5,12 @@ import org.jetbrains.java.decompiler.api.plugin.PluginOptions;
 import org.jetbrains.java.decompiler.main.Init;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.plugins.PluginContext;
+import org.jetbrains.java.decompiler.util.Pair;
+import org.jetbrains.java.decompiler.util.future.MoreString;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class ConsoleHelp {
@@ -67,7 +70,7 @@ public class ConsoleHelp {
       PluginOptions opt = plugin.getPluginOptions();
 
       if (opt != null) {
-        var opts = opt.provideOptions();
+        Pair<Class<?>, Consumer<PluginOptions.AddDefaults>> opts = opt.provideOptions();
 
         List<Field> pluginFields = Arrays.stream(opts.a.getDeclaredFields())
           .filter(field -> field.getType() == String.class)
@@ -119,13 +122,13 @@ public class ConsoleHelp {
       StringBuilder sb = new StringBuilder();
       sb.append(isShortName ? "-" : "--")
         .append(paramName)
-        .append(" ".repeat(Math.max(40 - paramName.length(), 0)))
+        .append(MoreString.repeat(" ", Math.max(40 - paramName.length(), 0)))
         .append("[")
         .append(type.value())
         .append("]")
-        .append(" ".repeat(Math.max(8 - type.value().length(), 0)))
+        .append(MoreString.repeat(" ", Math.max(8 - type.value().length(), 0)))
         .append(name.value())
-        .append(" ".repeat(Math.max(50 - name.value().length(), 0)))
+        .append(MoreString.repeat(" ", Math.max(50 - name.value().length(), 0)))
         .append(":");
 
       StringBuilder sb2 = new StringBuilder();
@@ -144,7 +147,7 @@ public class ConsoleHelp {
             break;
         }
         sb2.append(")");
-        sb2.append(" ".repeat(Math.max(18 - sb2.length(), 1)));
+        sb2.append(MoreString.repeat(" ", Math.max(18 - sb2.length(), 1)));
         sb.append(sb2);
       }
 

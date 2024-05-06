@@ -97,7 +97,7 @@ public class StructContext {
     if (ret == getSentinel()) {
       return null;
     } else {
-      final var correctedName = this.badlyPlacedClasses.remove(name);
+      final String correctedName = this.badlyPlacedClasses.remove(name);
       // Correct the class location
       if (correctedName != null) {
         this.classes.put(correctedName, ret);

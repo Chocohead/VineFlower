@@ -121,7 +121,7 @@ public class TinyNameProvider implements IVariableNameProvider {
   @Override
   public String renameParameter(int flags, VarType type, String name, int index) {
     String typeName;
-    try (var lock = DecompilerContext.getImportCollector().lock()) {
+    try (ImportCollector.Lock lock = DecompilerContext.getImportCollector().lock()) {
       typeName = ExprProcessor.getCastTypeName(type);
     }
     if (!this.renameParameters) {

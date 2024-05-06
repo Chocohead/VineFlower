@@ -16,6 +16,7 @@ import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
+import org.jetbrains.java.decompiler.util.future.MoreString;
 import org.jetbrains.java.decompiler.util.token.ClassTextToken;
 import org.jetbrains.java.decompiler.util.token.FieldTextToken;
 import org.jetbrains.java.decompiler.util.token.MethodTextToken;
@@ -153,7 +154,7 @@ public class TextBuffer {
       index += length + 1;
     }
 
-    if (!text.isBlank()) {
+    if (!MoreString.isBlank(text)) {
       addClassToken(index, text.length(), qualifiedName);
     }
 

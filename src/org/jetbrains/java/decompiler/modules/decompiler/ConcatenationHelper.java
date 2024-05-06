@@ -10,6 +10,7 @@ import org.jetbrains.java.decompiler.struct.consts.PrimitiveConstant;
 import org.jetbrains.java.decompiler.struct.gen.CodeType;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
+import org.jetbrains.java.decompiler.util.future.MoreString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -213,7 +214,7 @@ public final class ConcatenationHelper {
           recipe = ((PrimitiveConstant) constant).getString();
         }
       } else if (bootstrapArguments.isEmpty()) { // makeConcat has no recipe, need to fake it (see StringConcatFactory#makeConcat)
-        recipe = TAG_ARG_S.repeat(parameters.size());
+        recipe = MoreString.repeat(TAG_ARG_S, parameters.size());
       }
 
       if (recipe != null) {

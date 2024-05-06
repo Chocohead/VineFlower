@@ -7,6 +7,7 @@ import org.jetbrains.java.decompiler.code.InstructionSequence;
 import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.ImportCollector;
+import org.jetbrains.java.decompiler.modules.decompiler.flow.DirectEdge;
 import org.jetbrains.java.decompiler.modules.decompiler.flow.DirectEdgeType;
 import org.jetbrains.java.decompiler.struct.gen.CodeType;
 import org.jetbrains.java.decompiler.util.collections.ListStack;
@@ -136,7 +137,7 @@ public class ExprProcessor implements CodeConstants {
       }
 
       // TODO: is this copying the stack into catch and finally blocks? It shouldn't do that.
-      for (var cd : node.getSuccessors(DirectEdgeType.REGULAR)) {
+      for (DirectEdge cd : node.getSuccessors(DirectEdgeType.REGULAR)) {
         DirectNode nd = cd.getDestination();
         if (!mapData.containsKey(nd)) {
           mapData.put(nd, copyVarExprents(data.copyStack()));
@@ -697,7 +698,7 @@ public class ExprProcessor implements CodeConstants {
 
   public static void markExprOddities(RootStatement root) {
     // We shouldn't have to do this, but turns out getting cast names is not pure. Sigh.
-    try (var lock = DecompilerContext.getImportCollector().lock()) {
+    try (ImportCollector.Lock lock = DecompilerContext.getImportCollector().lock()) {
       markExprOddities(root, root);
     }
   }

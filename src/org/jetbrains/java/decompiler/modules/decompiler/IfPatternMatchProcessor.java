@@ -73,7 +73,7 @@ public final class IfPatternMatchProcessor {
           statement.fixIfInvariantEmptyElseBranch();
         }
       } else {
-        var allSuc = statement.getAllSuccessorEdges();
+        List<StatEdge> allSuc = statement.getAllSuccessorEdges();
         if (allSuc.size() == 1) {
           // In theory, the if branch can 'fall through' to here, but then this branch has multiple predecessors
           // and will get left alone anyway

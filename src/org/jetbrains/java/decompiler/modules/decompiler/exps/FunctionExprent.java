@@ -568,13 +568,13 @@ public class FunctionExprent extends Exprent {
 
       if (funcType.ordinal() <= FunctionType.LE.ordinal()) {
         if (right instanceof ConstExprent) {
-          var other = left.getExprType();
+          VarType other = left.getExprType();
           if (other != null) {
             ((ConstExprent) right).adjustConstType(other);
           }
         }
         else if (left instanceof ConstExprent) {
-          var other = right.getExprType();
+          VarType other = right.getExprType();
           if (other != null) {
             ((ConstExprent) left).adjustConstType(other);
           }

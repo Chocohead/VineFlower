@@ -6,6 +6,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.exps;
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.ClassesProcessor.ClassNode;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.collectors.ImportCollector.Lock;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.rels.MethodWrapper;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
@@ -142,7 +143,7 @@ public class AssignmentExprent extends Exprent {
       // We must lock the collector: this prevents the retrieval of the cast type name to impact the import list.
       // This is fine as we're only using the cast type name to ensure that it's not the unrepresentable type.
       String castName;
-      try (var lock = DecompilerContext.getImportCollector().lock()) {
+      try (Lock lock = DecompilerContext.getImportCollector().lock()) {
         castName = ExprProcessor.getCastTypeName(leftType);
       }
 

@@ -4,6 +4,7 @@ import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.code.cfg.ControlFlowGraph;
 import org.jetbrains.java.decompiler.code.cfg.ExceptionRangeCFG;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.collectors.ImportCollector.Lock;
 import org.jetbrains.java.decompiler.main.rels.DecompileRecord;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
@@ -50,7 +51,7 @@ public class DotExporter {
   // Nodes with green borders are the canonical exit of method, but these may not always be emitted.
 
   private static String statToDot(Statement stat, String name) {
-    try (var lock = DecompilerContext.getImportCollector().lock()) {
+    try (Lock lock = DecompilerContext.getImportCollector().lock()) {
       return statToDot(stat, name, null);
     }
   }
@@ -679,7 +680,7 @@ public class DotExporter {
       return;
     try{
       BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(getFile(DOTS_FOLDER, mt, suffix)));
-      try (var lock = DecompilerContext.getImportCollector().lock()) {
+      try (Lock lock = DecompilerContext.getImportCollector().lock()) {
         out.write(digraphToDot(dgraph, vars).getBytes());
       }
       out.close();
@@ -697,7 +698,7 @@ public class DotExporter {
       return;
     try{
       BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(getFile(DOTS_ERROR_FOLDER, mt, suffix)));
-      try (var lock = DecompilerContext.getImportCollector().lock()) {
+      try (Lock lock = DecompilerContext.getImportCollector().lock()) {
         out.write(digraphToDot(dgraph, vars).getBytes());
       }
       out.close();
@@ -719,7 +720,7 @@ public class DotExporter {
       return;
     try{
       BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(getFile(DOTS_FOLDER, mt, subdirectory, suffix)));
-      try (var lock = DecompilerContext.getImportCollector().lock()) {
+      try (Lock lock = DecompilerContext.getImportCollector().lock()) {
         out.write(statToDot(stat, suffix, extraProps).getBytes());
       }
       out.close();

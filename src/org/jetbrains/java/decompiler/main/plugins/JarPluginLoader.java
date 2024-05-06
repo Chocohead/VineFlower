@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jetbrains.java.decompiler.util.future.MoreFiles;
+
 // Finds plugins included in the main Vineflower Jar via Jar-In-Jar
 public class JarPluginLoader {
   static List<Class<?>> PLUGIN_CLASSES = new ArrayList<>();
@@ -41,7 +43,7 @@ public class JarPluginLoader {
               continue;
             }
 
-            String pluginClass = Files.readString(file);
+            String pluginClass = MoreFiles.readString(file);
 
             InJarClassLoader loader = new InJarClassLoader(pluginfs, JarPluginLoader.class.getClassLoader());
 

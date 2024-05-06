@@ -1,6 +1,8 @@
 package org.jetbrains.java.decompiler.api.java;
 
 import org.jetbrains.java.decompiler.api.plugin.pass.NamedPass;
+import org.jetbrains.java.decompiler.util.future.MoreList;
+import org.jetbrains.java.decompiler.util.future.MoreMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,9 +25,9 @@ public final class JavaPassRegistrar {
 
   // Deep, immutable copy
   public Map<JavaPassLocation, List<NamedPass>> getPasses() {
-    return Map.copyOf(
+    return MoreMap.copyOf(
       passes.keySet()
-        .stream().collect(Collectors.toMap(k -> k, v -> List.copyOf(passes.get(v))))
+        .stream().collect(Collectors.toMap(k -> k, v -> MoreList.copyOf(passes.get(v))))
     );
   }
 }

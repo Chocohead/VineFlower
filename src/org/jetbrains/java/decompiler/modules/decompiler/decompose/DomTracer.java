@@ -3,6 +3,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.decompose;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructMethod;
 import org.jetbrains.java.decompiler.util.DotExporter;
+import org.jetbrains.java.decompiler.util.future.MoreMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,19 +45,19 @@ class DomTracer {
   }
 
   void error(Statement stat, String s) {
-    this.add(stat, s, Map.of(stat, "fillcolor=coral1,style=filled"));
+    this.add(stat, s, MoreMap.of(stat, "fillcolor=coral1,style=filled"));
   }
 
   void warn(Statement stat, String s) {
-    this.add(stat, s, Map.of(stat, "fillcolor=tan1,style=filled"));
+    this.add(stat, s, MoreMap.of(stat, "fillcolor=tan1,style=filled"));
   }
 
   void info(Statement stat, String s) {
-    this.add(stat, s, Map.of(stat, "fillcolor=lightblue,style=filled"));
+    this.add(stat, s, MoreMap.of(stat, "fillcolor=lightblue,style=filled"));
   }
 
   void success(Statement stat, String s) {
-    this.add(stat, s, Map.of(stat, "fillcolor=lawngreen,style=filled"));
+    this.add(stat, s, MoreMap.of(stat, "fillcolor=lawngreen,style=filled"));
   }
 
   void successCreated(Statement stat, String s, Statement newStat) {

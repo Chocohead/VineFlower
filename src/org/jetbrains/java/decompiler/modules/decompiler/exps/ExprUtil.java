@@ -11,6 +11,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
 import org.jetbrains.java.decompiler.struct.attr.StructInnerClassesAttribute;
+import org.jetbrains.java.decompiler.util.future.MoreMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class ExprUtil {
-  public static final Map<String, String> PRIMITIVE_TYPES = Map.of(
+  public static final Map<String, String> PRIMITIVE_TYPES = MoreMap.of(
     "java/lang/Boolean", "boolean",
     "java/lang/Byte", "byte",
     "java/lang/Character", "char",

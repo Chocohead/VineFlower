@@ -82,7 +82,7 @@ public class SSAConstructorSparseEx extends SFormsConstructor {
   public Map<VarVersionPair, Integer> getSimpleReversePhiLookup() {
     // simple union find
     Map<VarVersionPair, Integer> ret = new HashMap<>();
-    for (var entry : this.phi.entrySet()) {
+    for (Map.Entry<VarVersionPair, FastSparseSetFactory.FastSparseSet<Integer>> entry : this.phi.entrySet()) {
       int index = entry.getKey().var;
       VarVersionPair left = entry.getKey();
 
@@ -117,7 +117,7 @@ public class SSAConstructorSparseEx extends SFormsConstructor {
     }
 
     // fully flatten each version
-    for (var entry : this.phi.entrySet()) {
+    for (Map.Entry<VarVersionPair, FastSparseSetFactory.FastSparseSet<Integer>> entry : this.phi.entrySet()) {
       VarVersionPair pair = entry.getKey();
 
       while (ret.containsKey(pair)) {
