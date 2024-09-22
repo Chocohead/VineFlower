@@ -1,4 +1,4 @@
-package org.teavm.samples.hello;
+package com.chocohead.vineflower;
 
 import org.teavm.classlib.ResourceSupplier;
 import org.teavm.classlib.ResourceSupplierContext;

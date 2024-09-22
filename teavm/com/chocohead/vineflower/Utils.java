@@ -1,4 +1,4 @@
-package org.teavm.samples.hello;
+package com.chocohead.vineflower;
 
 import java.util.Iterator;
 

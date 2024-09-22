@@ -217,7 +217,7 @@ jar {
 
 teavm.js {
   addedToWebApp = true
-  mainClass = "org.teavm.samples.hello.Client"
+  mainClass = 'com.chocohead.vineflower.Client'
   obfuscated = false
   sourceMap = true
   debugInformation = true
