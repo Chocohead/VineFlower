@@ -1175,6 +1175,7 @@ public class InvocationExprent extends Exprent {
 
   private boolean isVarArgCall() {
     StructClass cl = DecompilerContext.getStructContext().getClass(classname);
+    if (cl == null) cl = ClasspathHelper.findClass(classname);
     if (cl != null) {
       StructMethod mt = cl.getMethod(InterpreterUtil.makeUniqueKey(name, stringDescriptor));
       if (mt != null) {
@@ -1183,8 +1184,6 @@ public class InvocationExprent extends Exprent {
     }
     else {
       // try to check the class on the classpath
-      Method mtd = ClasspathHelper.findMethod(classname, name, descriptor);
-      return mtd != null && mtd.isVarArgs();
     }
     return false;
   }

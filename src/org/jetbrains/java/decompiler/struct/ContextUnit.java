@@ -139,12 +139,12 @@ public class ContextUnit {
     }
 
     //Whooo threads!
-    List<Future<?>> futures = new ArrayList<>();
+    List<Thread> futures = new ArrayList<>();
     int threads = Integer.parseInt((String) DecompilerContext.getProperty(IFernflowerPreferences.THREADS));
     if (threads <= 0) {
       threads = Runtime.getRuntime().availableProcessors();
     }
-    ForkJoinPool pool = new ForkJoinPool(threads, namingScheme(), null, true);
+    //ForkJoinPool pool = new ForkJoinPool(threads, namingScheme(), null, true);
     final DecompilerContext rootContext = DecompilerContext.getCurrentContext();
     final List<ClassContext> toDump = new ArrayList<>(classEntries.size());
     Set<String> seen = new LinkedHashSet<>();
@@ -164,7 +164,7 @@ public class ContextUnit {
 
     // pre-process
     for (final ClassContext classCtx : toDump) {
-      futures.add(pool.submit(() -> {
+      futures.add(startThread(() -> {
         setContext(rootContext);
         classCtx.ctx = DecompilerContext.getCurrentContext();
         try {
@@ -175,7 +175,7 @@ public class ContextUnit {
         } finally {
           DecompilerContext.setCurrentContext(null);
         }
-      }));
+      }, "Vineflower-DecompilerThread-" + THREAD_ID.getAndIncrement()));
     }
 
     waitForAll(futures);
@@ -190,18 +190,18 @@ public class ContextUnit {
         continue;
       }
 
-      futures.add(pool.submit(() -> {
+      futures.add(startThread(() -> {
         DecompilerContext.setCurrentContext(classCtx.ctx);
         classCtx.classContent = decompiledData.getClassContent(classCtx.cl);
         if (DecompilerContext.getOption(IFernflowerPreferences.BYTECODE_SOURCE_MAPPING)) {
           classCtx.mapping = DecompilerContext.getBytecodeSourceMapper().getOriginalLinesMapping();
         }
-      }));
+      }, "Vineflower-DecompilerThread-" + THREAD_ID.getAndIncrement()));
     }
 
     waitForAll(futures);
     futures.clear();
-    pool.shutdown();
+    //pool.shutdown();
     THREAD_ID.set(0);
 
     // write to file
@@ -238,18 +238,18 @@ public class ContextUnit {
     }
   }
 
-  private static void waitForAll(final List<Future<?>> futures) {
+  private static Thread startThread(Runnable task, String name) {
+	  Thread out = new Thread(task, name);
+	  out.start();
+	  return out;
+  }
+
+  private static void waitForAll(final List<Thread> futures) {
     for (int i = futures.size() - 1; i >= 0; i--) {
-      Future<?> future = futures.get(i);
+      Thread future = futures.get(i);
 
       try {
-        future.get();
-      } catch (ExecutionException e) {
-        if (e.getCause() instanceof CancelationManager.CanceledException) {
-          throw (CancelationManager.CanceledException) e.getCause();
-        } else {
-          throw new RuntimeException(e);
-        }
+        future.join();
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }

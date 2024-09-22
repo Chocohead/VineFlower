@@ -53,7 +53,7 @@ public class ClasspathScanner {
       private final ModuleReader reader;
 
       public ModuleContextSource(final ModuleReference ref) throws IOException {
-        super(ref.descriptor());
+        super(ref.descriptor().toNameAndVersion());
         this.reader = ref.open();
       }
 

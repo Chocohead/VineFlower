@@ -100,26 +100,20 @@ public class Fernflower implements IDecompiledData {
     logger.writeMessage(String.format("JVM info: %s - %s - %s", vendor, javaVersion, jvmVersion), IFernflowerLogger.Severity.INFO);
 
     if (DecompilerContext.getOption(IFernflowerPreferences.INCLUDE_ENTIRE_CLASSPATH)) {
-      ClasspathScanner.addAllClasspath(structContext);
+    	throw new UnsupportedOperationException("Tried to use whole classpath");
     } else if (!DecompilerContext.getProperty(IFernflowerPreferences.INCLUDE_JAVA_RUNTIME).toString().isEmpty()) {
       final String javaRuntime = DecompilerContext.getProperty(IFernflowerPreferences.INCLUDE_JAVA_RUNTIME).toString();
       if (javaRuntime.equalsIgnoreCase(JrtFinder.CURRENT) || javaRuntime.equalsIgnoreCase("1")) {
         JrtFinder.addRuntime(structContext);
       } else if (!javaRuntime.equalsIgnoreCase("0")) {
-        JrtFinder.addRuntime(structContext, new File(javaRuntime));
+	    throw new UnsupportedOperationException("Tried to use Java runtime at " + javaRuntime);
       }
     }
   }
 
   private static IIdentifierRenamer loadHelper(String className, IFernflowerLogger logger) {
     if (className != null) {
-      try {
-        Class<?> renamerClass = Fernflower.class.getClassLoader().loadClass(className);
-        return (IIdentifierRenamer) renamerClass.getDeclaredConstructor().newInstance();
-      }
-      catch (Exception e) {
-        logger.writeMessage("Cannot load renamer '" + className + "'", IFernflowerLogger.Severity.WARN, e);
-      }
+      throw new UnsupportedOperationException("Tried to use renamer " + className);
     }
 
     return new ConverterHelper();

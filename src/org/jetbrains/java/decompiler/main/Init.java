@@ -16,6 +16,6 @@ public final class Init {
     StructGeneralAttribute.init();
 
     // Class-load all plugins that potentially could be included in the jar
-    JarPluginLoader.init();
+    //JarPluginLoader.init(); //We'll directly hard-code these
   }
 }

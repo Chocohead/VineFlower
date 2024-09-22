@@ -1,5 +1,9 @@
 pluginManagement {
   repositories {
+    maven {
+      name = 'TeaVM'
+      url = 'https://teavm.org/maven/repository/'
+    }
     mavenCentral() // avoid delegating to JCenter to minimize outages
     gradlePluginPortal()
   }

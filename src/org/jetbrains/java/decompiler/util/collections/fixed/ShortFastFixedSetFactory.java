@@ -4,6 +4,7 @@ package org.jetbrains.java.decompiler.util.collections.fixed;
 import org.jetbrains.java.decompiler.modules.decompiler.ValidationHelper;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 final class ShortFastFixedSetFactory<E> extends FastFixedSetFactory<E> {
   private final Map<E, Long> masks = new LinkedHashMap<>();
@@ -133,17 +134,10 @@ final class ShortFastFixedSetFactory<E> extends FastFixedSetFactory<E> {
 
     @Override
     public String toString() {
-      StringJoiner buffer = new StringJoiner(",", "{", "}");
 
       long data = this.data;
 
-      ShortFastFixedSetFactory.this.masks.forEach((item, mask) -> {
-        if ((data & mask) != 0) {
-          buffer.add(item.toString());
-        }
-      });
-
-      return buffer.toString();
+      return masks.entrySet().stream().filter(entry -> (data & entry.getValue()) != 0).map(entry -> entry.getKey().toString()).collect(Collectors.joining(",", "{", "}"));
     }
 
     // TODO: this can be optimized

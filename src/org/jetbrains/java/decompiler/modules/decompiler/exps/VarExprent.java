@@ -167,7 +167,7 @@ public class VarExprent extends Exprent implements Pattern {
         if (method.varproc != null) {
           Integer originalIndex = method.varproc.getVarOriginalIndex(varIndex);
           int i = originalIndex != null ? originalIndex : varIndex;
-          Integer paramsSize = Arrays.stream(descriptor.params).map(v -> v.stackSize).reduce(0, Integer::sum);
+          int paramsSize = Arrays.stream(descriptor.params).mapToInt(v -> v.stackSize).sum();
           param = i <= paramsSize - (method.methodStruct.hasModifier(CodeConstants.ACC_STATIC) ? 1 : 0);
         }
 

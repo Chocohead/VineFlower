@@ -4,6 +4,7 @@ package org.jetbrains.java.decompiler.util.collections.fixed;
 import org.jetbrains.java.decompiler.modules.decompiler.ValidationHelper;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 class LongFastFixedSetFactory<E> extends FastFixedSetFactory<E> {
   private final Map<E, Integer> indexes = new LinkedHashMap<>();
@@ -176,17 +177,13 @@ class LongFastFixedSetFactory<E> extends FastFixedSetFactory<E> {
 
     @Override
     public String toString() {
-      StringJoiner buffer = new StringJoiner(",", "{", "}");
 
       long[] data = this.data;
 
-      LongFastFixedSetFactory.this.indexes.forEach((item, i) -> {
-        if ((data[i >> 6] & (1L << (i & 63))) != 0) {
-          buffer.add(item.toString());
-        }
-      });
-
-      return buffer.toString();
+      return indexes.entrySet().stream().filter(entry -> {
+    	  int i = entry.getValue();
+    	  return (data[i >> 6] & (1L << (i & 63))) != 0;
+      }).map(entry -> entry.getKey().toString()).collect(Collectors.joining(",", "{", "}"));
     }
 
     // TODO: this can be optimized

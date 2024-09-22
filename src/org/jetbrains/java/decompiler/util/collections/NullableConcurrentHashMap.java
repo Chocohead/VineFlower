@@ -21,6 +21,10 @@ public class NullableConcurrentHashMap<K,V> extends ConcurrentHashMap<K,V> {
     }
   };
 
+  public V getNullValue() {
+	return (V) NULL_VALUE;
+  }
+
   @Override
   public V get(Object key) {
     if (key == null) {

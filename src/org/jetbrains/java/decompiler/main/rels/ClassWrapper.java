@@ -99,7 +99,7 @@ public class ClassWrapper {
                 String message = "Processing time limit exceeded for method " + mt.getName() + ", execution interrupted.";
                 DecompilerContext.getLogger().writeMessage(message, IFernflowerLogger.Severity.ERROR);
                 killThread(mtThread);
-                error = new TimeoutException();
+                error = new ThreadDeath();
                 break;
               }
             }
@@ -213,7 +213,7 @@ public class ClassWrapper {
 
   @SuppressWarnings("deprecation")
   private static void killThread(Thread thread) {
-    thread.stop();
+    thread.interrupt();
   }
 
   public MethodWrapper getMethodWrapper(String name, String descriptor) {

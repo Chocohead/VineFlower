@@ -19,10 +19,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class JrtFinder {
     public static final String CURRENT = "current";
@@ -37,67 +45,96 @@ public class JrtFinder {
     }
   }
 
-  public static void addRuntime(final StructContext ctx, final File javaHome) {
-    if (new File(javaHome, "lib/jrt-fs.jar").isFile()) {
-      // Java 9+
-      try {
-        ctx.addSpace(new JavaRuntimeContextSource(javaHome), false);
-      } catch (final IOException ex) {
-        DecompilerContext.getLogger().writeMessage("Failed to open java runtime at " + javaHome, ex);
-      }
-      return;
-    } else if (javaHome.exists()) {
-      // legacy runtime, add all jars from the lib and jre/lib folders
-      boolean anyAdded = false;
-      final List<File> jrt = new ArrayList<>();
-      Collections.addAll(jrt, new File(javaHome, "jre/lib").listFiles());
-      Collections.addAll(jrt, new File(javaHome, "lib").listFiles());
-      for (final File lib : jrt) {
-        if (lib.isFile() && lib.getName().endsWith(".jar")) {
-          ctx.addSpace(lib, false);
-          anyAdded = true;
-        }
-      }
-      if (anyAdded) return;
-    }
-
-    // does not exist
-    DecompilerContext.getLogger().writeMessage("Unable to detect a java runtime at " + javaHome, IFernflowerLogger.Severity.ERROR);
-  }
-
   static final class JavaRuntimeModuleContextSource extends ModuleBasedContextSource {
-    private Path module;
+	private final ZipFile root;
+    private final String module;
 
-    JavaRuntimeModuleContextSource(final ModuleDescriptor descriptor, final Path moduleRoot) {
+    JavaRuntimeModuleContextSource(final String descriptor, final ZipFile root, final String moduleRoot) {
       super(descriptor);
+      this.root = root;
       this.module = moduleRoot;
     }
 
     @Override
     public InputStream getInputStream(String resource) throws IOException {
-      return Files.newInputStream(this.module.resolve(resource));
+      ZipEntry entry = this.root.getEntry(this.module + resource);
+      return entry != null ? root.getInputStream(entry) : null;
     }
 
     @Override
     protected Stream<String> entryNames() throws IOException {
-      try (final Stream<Path> dir = Files.walk(this.module)) {
-        return dir.map(it -> this.module.relativize(it).toString()).collect(Collectors.toList()).stream();
-      }
+	  //return this.root.stream().filter(entry -> entry.getName().startsWith(module)).map(entry -> entry.getName().substring(module.length()));
+      return StreamSupport.stream(
+        /*new AbstractSpliterator<>(Long.MAX_VALUE, Spliterator.ORDERED | Spliterator.NONNULL) {
+          private final Enumeration<? extends ZipEntry> it = root.entries();
+
+          private String next() {
+            while (it.hasMoreElements()) {
+              ZipEntry entry = it.nextElement();
+              if (!entry.getName().startsWith(module)) continue;
+
+              return entry.getName().substring(module.length());
+            }
+            return null;
+          }
+
+          @Override
+          public boolean tryAdvance(Consumer<? super String> action) {
+            String out = next();
+            if (out != null) {
+              action.accept(out);
+              return true;
+            }
+            return false;
+          }
+
+          @Override
+          public void forEachRemaining(Consumer<? super String> action) {
+            for (String out = next(); out != null; out = next()) {
+              action.accept(out);
+            }
+          }
+        }, false);*/
+        Spliterators.spliteratorUnknownSize(new Iterator<String>() {
+          private final Enumeration<? extends ZipEntry> it = root.entries();
+          private String next = nextElement();
+
+          private String nextElement() {
+            while (it.hasMoreElements()) {
+              ZipEntry entry = it.nextElement();
+              if (!entry.getName().startsWith(module)) continue;
+
+              return entry.getName().substring(module.length());
+            }
+            return null;
+          }
+
+          @Override
+          public String next() {
+            String out = next;
+            if (out == null) throw new NoSuchElementException();
+            next = nextElement();
+            return out;
+          }
+
+          @Override
+          public boolean hasNext() {
+            return next != null;
+          }
+        }, Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
   }
 
   static final class JavaRuntimeContextSource implements IContextSource, AutoCloseable {
     private final String identifier;
-    private final FileSystem jrtFileSystem;
+    private final ZipFile jrtFileSystem;
 
     public JavaRuntimeContextSource(final File javaHome) throws IOException {
-      final var url = URI.create("jrt:/");
       if (javaHome == null) {
         this.identifier = "current";
-        this.jrtFileSystem = FileSystems.newFileSystem(url, Map.of());
+        this.jrtFileSystem = new ZipFile("/java.zip");
       } else {
-        this.identifier = javaHome.getAbsolutePath();
-        this.jrtFileSystem = FileSystems.newFileSystem(url, Map.of("java.home", javaHome.getAbsolutePath()));
+        throw new UnsupportedOperationException("Tried to use " + javaHome + " as a context source");
       }
     }
 
@@ -110,26 +147,34 @@ public class JrtFinder {
     public Entries getEntries() {
       // One child source for every module in the runtime
       final List<IContextSource> children = new ArrayList<>();
-      try {
-        final List<Path> modules = Files.list(this.jrtFileSystem.getPath("modules")).collect(Collectors.toList());
-        for (final Path module : modules) {
-          ModuleDescriptor descriptor;
-          try (final InputStream is = Files.newInputStream(module.resolve("module-info.class"))) {
+      {
+        final List<String> modules = new ArrayList<>();
+        for (Enumeration<? extends ZipEntry> it = this.jrtFileSystem.entries(); it.hasMoreElements();) {
+          ZipEntry entry = it.nextElement();
+          if (!entry.isDirectory()) continue;
+
+          String name = entry.getName().substring(0, entry.getName().length() - 1);
+          if (name.indexOf('/') >= 0) continue;
+          modules.add(name);
+        }
+        for (final String module : modules) {
+          ZipEntry entry = this.jrtFileSystem.getEntry(module + "/module-info.class");
+          if (entry == null) continue; //Module doesn't have a module-info?
+          String descriptor;
+          try (final InputStream is = this.jrtFileSystem.getInputStream(entry)) {
             StructClass clazz = StructClass.create(new DataInputFullStream(is.readAllBytes()), false);
             StructModuleAttribute moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
             if (moduleAttr == null) continue;
 
-            descriptor = moduleAttr.asDescriptor();
+            descriptor = moduleAttr.moduleName;
+            if (moduleAttr.moduleVersion != null) descriptor += '@' + moduleAttr.moduleVersion;
           } catch (final IOException ex) {
             continue;
           }
-          children.add(new JavaRuntimeModuleContextSource(descriptor, module));
+          children.add(new JavaRuntimeModuleContextSource(descriptor, this.jrtFileSystem, module + '/'));
         }
 
         return new Entries(List.of(), List.of(), List.of(), children);
-      } catch (final IOException ex) {
-        DecompilerContext.getLogger().writeMessage("Failed to read modules from runtime " + this.identifier, ex);
-        return Entries.EMPTY;
       }
     }
 

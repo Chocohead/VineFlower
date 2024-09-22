@@ -2,11 +2,14 @@
 
 import org.vineflower.build.JasmCompile
 import org.vineflower.build.TestDataRuntimesProvider
+import org.teavm.gradle.api.SourceFilePolicy
 
 plugins {
   id 'jacoco'
   id 'com.gradleup.shadow' version '8.3.0'
   id 'org.jetbrains.kotlin.jvm' version '2.0.0'
+  id 'war'
+  id 'org.teavm' version '0.11.0-dev-1'
   id("io.github.gradle-nexus.publish-plugin") version '2.0.0'
 }
 
@@ -14,12 +17,14 @@ apply plugin: 'jacoco'
 apply plugin: 'java-test-fixtures'
 apply plugin: 'groovy'
 apply plugin: 'scala'
+apply plugin: 'war'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 allprojects {
   apply plugin: 'com.gradleup.shadow'
   apply plugin: 'java'
+  apply plugin: 'eclipse'
   ext.isArm = System.getProperty('os.arch') == 'aarch64'
 
   group = 'org.vineflower'
@@ -64,6 +69,8 @@ version = version + (ENV.STATUS == "snapshot" ? "-SNAPSHOT" : "")
 
 sourceSets {
   main.java.srcDirs 'src'
+  teavm.java.srcDirs 'teavm'
+  teavm.resources.srcDirs 'resources'
   test.java.srcDirs 'test'
   testFixtures.java.srcDirs 'testFixtures'
   testDataGroovy.groovy.srcDirs files("testData/src/groovy/")
@@ -71,9 +78,17 @@ sourceSets {
   testDataScala.scala.srcDirs files("testData/src/scala")
 }
 
-repositories { mavenCentral() }
+repositories {
+  mavenCentral()
+  maven {
+    name = 'TeaVM'
+    url = 'https://teavm.org/maven/repository/'
+  }
+}
 
 dependencies {
+  teavm(teavm.libs.jsoApis)
+
   testImplementation("org.junit.jupiter:junit-jupiter-api:${project.junit_bom}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${project.junit_bom}")
   testImplementation("org.junit.jupiter:junit-jupiter-params:${project.junit_bom}")
@@ -199,6 +214,44 @@ jar {
     )
   }
 }
+
+teavm.js {
+  addedToWebApp = true
+  mainClass = "org.teavm.samples.hello.Client"
+  obfuscated = false
+  sourceMap = true
+  debugInformation = true
+  sourceFilePolicy = SourceFilePolicy.COPY
+}
+
+def extractCtZip = tasks.register('extractCtZip', Zip) {
+  group = 'build'
+
+  def launcher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21) //Has to be newer than the version targetted
+  }
+  def javaHome = launcher.map { it.metadata.installationPath }
+
+  def version = 'H'
+  inputs.property('version', version)
+  archiveFileName = 'java.zip'
+  destinationDirectory = temporaryDir
+
+  from(zipTree(javaHome.map { it.file('lib/ct.sym') })) {
+    include { FileTreeElement details ->
+      def split = details.path.indexOf('/')
+      split > 0 && details.path.substring(0, split).contains(version)
+    }
+    includeEmptyDirs = false
+    eachFile { fcd ->
+      fcd.relativePath = new RelativePath(true, fcd.relativePath.segments.drop(1))  
+    }
+  }
+  rename '(.+)\\.sig', '$1.class'
+}
+
+sourceSets.teavm.resources.srcDirs += extractCtZip.map { it.temporaryDir }
+
 
 // If testFixtures can't be inferred from the build path, it'll need to be manually specified to be able to find
 // the test fixtures class. Put it in a unique place to mark it as such.

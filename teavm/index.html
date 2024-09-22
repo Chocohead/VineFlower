@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vineflower</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <style>
+    	.error {
+    		color: red;
+		}
+    </style>
+    <script type="text/javascript" charset="utf-8" src="js/vineflower.js"></script>
+  </head>
+  <body onload="main()">
+    <h1>Vineflower</h1>
+    <input type="file" id="input" accept=".class, .jar" multiple/>
+    <button id="decompile-button" disabled>Decompile</button>
+    <div id="response-panel">
+    </div>
+    <div style="display:none" id="thinking-panel"><i>Server is thinking...</i></div>
+  </body>
+</html>

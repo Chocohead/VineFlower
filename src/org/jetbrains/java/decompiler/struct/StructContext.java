@@ -12,10 +12,12 @@ import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMethodDescriptor;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
+import org.jetbrains.java.decompiler.util.collections.NullableConcurrentHashMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -26,31 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class StructContext {
-  private static volatile StructClass SENTINEL_CLASS;
-
-  static StructClass getSentinel() {
-    if (SENTINEL_CLASS == null) {
-      synchronized (StructContext.class) {
-        if (SENTINEL_CLASS == null) {
-          try (final InputStream stream = StructContext.class.getResourceAsStream("StructContext.class")) {
-            byte[] data = stream.readAllBytes();
-            SENTINEL_CLASS = StructClass.create(new DataInputFullStream(data), false);
-          } catch (final IOException ex) {
-            throw new UncheckedIOException(ex);
-          }
-        }
-      }
-    }
-    return SENTINEL_CLASS;
-  }
-
   @SuppressWarnings("deprecation")
   private final IBytecodeProvider legacyProvider;
   private final IResultSaver saver;
   private final IDecompiledData decompiledData;
   private final List<ContextUnit> units = new ArrayList<>();
   private final List<ContextUnit> lazyUnits = new ArrayList<>();
-  private final Map<String, StructClass> classes = new ConcurrentHashMap<>();
+  private final NullableConcurrentHashMap<String, StructClass> classes = new NullableConcurrentHashMap<>();
   private final Map<String, String> badlyPlacedClasses = new ConcurrentHashMap<>(); // original -> corrected
   private final Map<String, ContextUnit> unitsByClassName = new ConcurrentHashMap<>();
   private final Map<String, List<String>> abstractNames = new HashMap<>();
@@ -90,9 +74,9 @@ public class StructContext {
           return clazz;
         }
       }
-      return getSentinel();
+      return this.classes.getNullValue();
     });
-    if (ret == getSentinel()) {
+    if (ret == this.classes.getNullValue()) {
       return null;
     } else {
       final var correctedName = this.badlyPlacedClasses.remove(name);
@@ -189,16 +173,16 @@ public class StructContext {
     String name = file.getName();
     if (name.endsWith(".jar") || name.endsWith(".zip")) return true;
     if (name.endsWith(".class")) return false;
-    try (SeekableByteChannel channel = Files.newByteChannel(file.toPath())) {
-      long size = channel.size();
+    try (RandomAccessFile channel = new RandomAccessFile(file, "r");) {
+      long size = channel.length();
       // The EOCD ZIP record has 22+n bytes depending on the length of the comment.
       if (size < 22) return false;
       int bufferSize = (int) Math.min(size & ~3, 1024);
-      channel.position(size - bufferSize);
+      channel.seek(size - bufferSize);
       ByteBuffer buffer = ByteBuffer.allocate(bufferSize).order(ByteOrder.LITTLE_ENDIAN);
       int read = 0;
       while (read < bufferSize) {
-        read += channel.read(buffer);
+        read += channel.read(buffer.array());
       }
       buffer.flip();
       for (int pos = buffer.limit() - 22; pos >= 0; pos--) {

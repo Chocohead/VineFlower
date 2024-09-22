@@ -12,15 +12,15 @@ import java.util.List;
 import java.util.stream.Stream;
 
 abstract class ModuleBasedContextSource implements IContextSource {
-  private final ModuleDescriptor ref;
+  private final String ref;
 
-  public ModuleBasedContextSource(final ModuleDescriptor ref) {
+  public ModuleBasedContextSource(final String ref) {
     this.ref = ref;
   }
 
   @Override
   public String getName() {
-    return "module " + this.ref.toNameAndVersion();
+    return "module " + this.ref;
   }
 
   protected abstract Stream<String> entryNames() throws IOException;

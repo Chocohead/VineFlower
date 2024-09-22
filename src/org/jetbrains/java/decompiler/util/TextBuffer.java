@@ -942,7 +942,7 @@ public class TextBuffer {
 
   // it's really important that this class does not directly or indirectly reference the TextBuffer, or we will create memory leaks
   static class DebugTrace extends WeakReference<TextBuffer> {
-    private static final Set<DebugTrace> ALL_REMAINING_TRACES = ConcurrentHashMap.newKeySet();
+    private static final Set<DebugTrace> ALL_REMAINING_TRACES = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private static final AtomicBoolean STARTED = new AtomicBoolean();
     private static final ReferenceQueue<TextBuffer> REFERENCE_QUEUE = new ReferenceQueue<>();
