@@ -51,6 +51,8 @@ import java.util.Set;
   }
 */
 public class StructClass extends StructMember {
+  static final StructClass EMPTY = new StructClass(0, null, null, null, false, 0, 0, null, null, null, null, null);
+
   public static StructClass create(DataInputFullStream in, boolean own) throws IOException {
     in.discard(4);
     int minorVersion = in.readUnsignedShort();

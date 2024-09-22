@@ -12,7 +12,6 @@ import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMethodDescriptor;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
-import org.jetbrains.java.decompiler.util.collections.NullableConcurrentHashMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class StructContext {
   private final IDecompiledData decompiledData;
   private final List<ContextUnit> units = new ArrayList<>();
   private final List<ContextUnit> lazyUnits = new ArrayList<>();
-  private final NullableConcurrentHashMap<String, StructClass> classes = new NullableConcurrentHashMap<>();
+  private final Map<String, StructClass> classes = new ConcurrentHashMap<>();
   private final Map<String, String> badlyPlacedClasses = new ConcurrentHashMap<>(); // original -> corrected
   private final Map<String, ContextUnit> unitsByClassName = new ConcurrentHashMap<>();
   private final Map<String, List<String>> abstractNames = new HashMap<>();
@@ -74,9 +73,9 @@ public class StructContext {
           return clazz;
         }
       }
-      return this.classes.getNullValue();
+      return StructClass.EMPTY;
     });
-    if (ret == this.classes.getNullValue()) {
+    if (ret == StructClass.EMPTY) {
       return null;
     } else {
       final var correctedName = this.badlyPlacedClasses.remove(name);
