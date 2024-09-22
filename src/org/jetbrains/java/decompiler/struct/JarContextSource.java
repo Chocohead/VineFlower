@@ -7,6 +7,7 @@ import org.jetbrains.java.decompiler.main.extern.IBytecodeProvider;
 import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
+import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -91,6 +92,22 @@ final class JarContextSource implements IContextSource, AutoCloseable {
 
     final ZipEntry entry = this.file.getEntry(resource);
     return this.file.getInputStream(entry);
+  }
+
+  @Override
+  public byte[] getBytes(Entry resource) throws IOException {
+    return getBytes(resource.path());
+  }
+
+  @Override
+  @SuppressWarnings("deprecation")
+  public byte[] getBytes(String resource) throws IOException {
+    if (this.legacyProvider != null) {
+      return this.legacyProvider.getBytecode(this.jarFile.getAbsolutePath(), resource);
+    }
+
+    final ZipEntry entry = this.file.getEntry(resource);
+    return InterpreterUtil.getBytes(this.file, entry);
   }
 
   @Override

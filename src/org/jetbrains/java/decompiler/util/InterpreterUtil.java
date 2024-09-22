@@ -36,9 +36,16 @@ public final class InterpreterUtil {
   }
 
   public static byte[] readBytes(InputStream stream, int length) throws IOException {
-    byte[] bytes = stream.readNBytes(length);
+    byte[] bytes = new byte[length];
+    int read = 0;
+    while (read < length) {
+        int count = stream.read(bytes, read, length - read);
+        if (count < 0)
+            break;
+        read += count;
+    }
 
-    if (bytes.length < length) {
+    if (read < length) {
       throw new IOException("premature end of stream");
     }
 

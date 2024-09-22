@@ -61,8 +61,8 @@ public class ContextUnit {
           this.otherEntries = new ArrayList<>();
           for (final IContextSource.Entry entry : entries.others()) {
             if ("fernflower_abstract_parameter_names.txt".equals(entry.basePath())) {
-              try (final InputStream is = this.source.getInputStream(entry)) {
-                final byte[] data = is.readAllBytes();
+              try {
+                final byte[] data = this.source.getBytes(entry);
                 DecompilerContext.getStructContext().loadAbstractMetadata(new String(data, StandardCharsets.UTF_8));
               } catch (final IOException ex) {
                 DecompilerContext.getLogger().writeMessage("Failed to load abstract parameter names file", IFernflowerLogger.Severity.ERROR, ex);

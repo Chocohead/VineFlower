@@ -62,6 +62,17 @@ public class JrtFinder {
     }
 
     @Override
+    public byte[] getBytes(Entry resource) throws IOException {
+      return getBytes(resource.path());
+    }
+
+    @Override
+    public byte[] getBytes(String resource) throws IOException {
+      final ZipEntry entry = this.root.getEntry(resource);
+      return entry != null ? InterpreterUtil.getBytes(this.root, entry) : null;
+    }
+
+    @Override
     protected Stream<String> entryNames() throws IOException {
 	  //return this.root.stream().filter(entry -> entry.getName().startsWith(module)).map(entry -> entry.getName().substring(module.length()));
       return StreamSupport.stream(
@@ -161,8 +172,9 @@ public class JrtFinder {
           ZipEntry entry = this.jrtFileSystem.getEntry(module + "/module-info.class");
           if (entry == null) continue; //Module doesn't have a module-info?
           String descriptor;
-          try (final InputStream is = this.jrtFileSystem.getInputStream(entry)) {
-            StructClass clazz = StructClass.create(new DataInputFullStream(is.readAllBytes()), false);
+          try {
+    	    byte[] bytes = InterpreterUtil.getBytes(this.jrtFileSystem, entry);
+            StructClass clazz = StructClass.create(new DataInputFullStream(bytes), false);
             StructModuleAttribute moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
             if (moduleAttr == null) continue;
 

@@ -3,6 +3,7 @@ package org.jetbrains.java.decompiler.main.extern;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -64,12 +65,25 @@ public interface IContextSource {
    * @throws IOException if an error is encountered while reading the class data
    */
   default byte[] getClassBytes(final String className) throws IOException {
-    final InputStream is = this.getInputStream(className + CLASS_SUFFIX);
+    return this.getBytes(className + CLASS_SUFFIX);
+  }
+
+  default byte[] getBytes(Entry resource) throws IOException {
+     return getBytes(getInputStream(resource));
+  }
+
+  default byte[] getBytes(String resource) throws IOException {
+    return getBytes(getInputStream(resource));
+  }
+
+  private byte[] getBytes(InputStream is) throws IOException {
     if (is == null)
       return null;
 
     try (is) {
-      return is.readAllBytes();
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      is.transferTo(out);
+      return out.toByteArray();
     }
   }
 
