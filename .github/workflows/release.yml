@@ -1,11 +1,18 @@
 name: Release
 on:
   workflow_dispatch: # Manual trigger
-  push:
-    tags:
-      - '*'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 jobs:
   build:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-24.04
     container:
       image: eclipse-temurin:17
@@ -15,9 +22,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
-      - run: ./gradlew build publish publishToSonatype closeAndReleaseSonatypeStagingRepository -x test --stacktrace
-        env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_KEY_PASSPHRASE: ${{ secrets.SIGNING_KEY_PASSPHRASE }}
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PASS: ${{ secrets.SONATYPE_PASS }}
+      - run: sed -i 's/obfuscated = false/obfuscated = true/' build.gradle
+      - run: sed -i 's/debugInformation = true/debugInformation = false/' build.gradle
+      - run: ./gradlew build -x test --stacktrace
+      - run: mv resources/index.html build/generated/teavm
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/generated/teavm'
+      - id: deployment
+        uses: actions/deploy-pages@v4
