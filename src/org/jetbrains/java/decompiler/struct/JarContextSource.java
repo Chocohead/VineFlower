@@ -119,7 +119,7 @@ final class JarContextSource implements IContextSource, AutoCloseable {
         final ZipEntry potentialManifest = file.getEntry(SingleFileSaver.MANIFEST);
         Manifest manifest = null;
         if (potentialManifest != null) {
-          try (final InputStream is = file.getInputStream(potentialManifest)) {
+          try (final InputStream is = new ByteArrayInputStream(InterpreterUtil.getBytes(file, potentialManifest))) {
             manifest = new Manifest(is);
           } catch (final IOException ex) {
             DecompilerContext.getLogger().writeMessage("Failed to read manifest from " + file, IFernflowerLogger.Severity.ERROR, ex);
