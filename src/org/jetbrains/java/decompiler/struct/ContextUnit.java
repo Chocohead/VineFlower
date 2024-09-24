@@ -164,7 +164,7 @@ public class ContextUnit {
 
     // pre-process
     for (final ClassContext classCtx : toDump) {
-      futures.add(startThread(() -> {
+      //futures.add(startThread(() -> {
         setContext(rootContext);
         classCtx.ctx = DecompilerContext.getCurrentContext();
         try {
@@ -175,7 +175,7 @@ public class ContextUnit {
         } finally {
           DecompilerContext.setCurrentContext(null);
         }
-      }, "Vineflower-DecompilerThread-" + THREAD_ID.getAndIncrement()));
+      //}, "Vineflower-DecompilerThread-" + THREAD_ID.getAndIncrement()));
     }
 
     waitForAll(futures);
@@ -190,13 +190,13 @@ public class ContextUnit {
         continue;
       }
 
-      futures.add(startThread(() -> {
+      //futures.add(startThread(() -> {
         DecompilerContext.setCurrentContext(classCtx.ctx);
         classCtx.classContent = decompiledData.getClassContent(classCtx.cl);
         if (DecompilerContext.getOption(IFernflowerPreferences.BYTECODE_SOURCE_MAPPING)) {
           classCtx.mapping = DecompilerContext.getBytecodeSourceMapper().getOriginalLinesMapping();
         }
-      }, "Vineflower-DecompilerThread-" + THREAD_ID.getAndIncrement()));
+      //}, "Vineflower-DecompilerThread-" + THREAD_ID.getAndIncrement()));
     }
 
     waitForAll(futures);
