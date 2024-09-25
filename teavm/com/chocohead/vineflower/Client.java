@@ -109,7 +109,7 @@ public final class Client {
 					String[] packages = entry.getKey().split("/");
 
 					Results root = rootResults;
-					for (int i = 0, end = packages.length - 2; i < end; i++) {
+					for (int i = 0, end = packages.length - 1; i < end; i++) {
 						root = root.children().computeIfAbsent(packages[i], Results::new);
 					}
 					root.classes().put(packages[packages.length - 1].split("\\.")[0], entry.getValue());
