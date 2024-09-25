@@ -30,7 +30,7 @@ public class StringyFileSaver implements IResultSaver {
 
 	@Override
 	public void saveClassFile(String path, String qualifiedName, String entryName, String content, int[] mapping) {
-		this.results.put(entryName, content);
+		this.results.put(qualifiedName, content);
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public class StringyFileSaver implements IResultSaver {
 
 	@Override
 	public void saveClassEntry(String path, String archiveName, String qualifiedName, String entryName, String content) {
-		this.results.put(entryName, content);
+		this.results.put(qualifiedName, content);
 	}
 
 	@Override

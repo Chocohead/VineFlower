@@ -1,21 +1,128 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Vineflower</title>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <style>
-    	.error {
-    		color: red;
-		}
-    </style>
-    <script type="text/javascript" charset="utf-8" src="js/vineflower.js"></script>
-  </head>
-  <body onload="main()">
-    <h1>Vineflower</h1>
-    <input type="file" id="input" accept=".class, .jar" multiple/>
-    <button id="decompile-button" disabled>Decompile</button>
-    <div id="response-panel">
-    </div>
-    <div style="display:none" id="thinking-panel"><i>Decompiling...</i></div>
-  </body>
+	<head>
+		<title>Vineflower</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				display: grid;
+				grid-template-columns: minmax(20%, 20rem) auto;
+				grid-template-rows: repeat(2, max-content) 1fr min-content;
+				place-content: stretch;
+				column-gap: 0.5rem;
+				height: 100vh;
+			}
+
+			header, #progress-panel {
+				align-self: center;
+				padding: 0 0 0 0.5rem;
+			}
+
+			header {
+				margin: auto 0;
+				display: flex;
+				align-items: baseline;
+				gap: 0.5rem;
+			}
+
+			header button {
+				margin-left: auto;
+			}
+
+			h1 {
+				grid-row: span 2;
+				align-self: center;
+				margin: 0.5rem 0;
+				text-align: center;
+			}
+
+			#navigation-panel {
+				margin: 0;
+				padding: 0 0 0 0.5rem;
+			}
+
+			#navigation-panel, #navigation-panel ul {
+				list-style-type: none;
+			}
+
+			#navigation-panel li {
+				user-select: none;
+			}
+
+			#navigation-panel li > span {
+				display: list-item;
+			}
+
+			#navigation-panel li > span, #navigation-panel li:not(:has(*)) {
+				cursor: pointer;
+			}
+
+			#navigation-panel li > span:hover, #navigation-panel li:not(:has(*)):hover {
+				background: whitesmoke; /* or gainsboro to be less subtle? */
+			}
+
+			#navigation-panel li > span::before {
+				content: "\25B6";
+				color: black;
+				display: inline-block;
+				margin-right: 0.25rem;
+			}
+
+			#navigation-panel li.open > span::before {
+				transform: rotate(90deg);
+			}
+
+			#navigation-panel li:not(.open) ul {
+				display: none;
+			}
+
+			#navigation-panel, #output-panel {
+				overflow: auto;
+			}
+
+			.error {
+				color: red;
+			}
+
+			footer {
+				grid-column: span 2;
+				padding: 0 0.5rem 0.25rem;
+				display: flex;
+				justify-content: space-between;
+				align-items: baseline;
+				gap: 1rem;
+			}
+		</style>
+		<script type="text/javascript" charset="utf-8" src="js/vineflower.js"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/felipec.min.css">
+		<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js" defer
+				integrity="sha384-GdEWAbCjn+ghjX0gLx7/N1hyTVmPAjdC2OvoAA0RyNcAOhqwtT8qnbCxWle2+uJX" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/java.min.js" defer
+				integrity="sha384-8mc5ynnm3AlnXn8P3ccSqVAaZIDoijPM08/Hp4DABy6GMy7EHCQFwiIUoGAaGJiO" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/kotlin.min.js" defer
+				integrity="sha384-s0inyAR7LE5SVvn9VCZrQaiUxkDi+RsQdSKzFh2CjWf+LFd01DAjt9wtxGhT+4qT" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/languages/scala.min.js" defer
+				integrity="sha384-SA6LxB7n4Y1G9cv1TTU9P9QCpQXJaNURCzOyoGjV/D9gkhcHYSsYERw8IVffZ8uD" crossorigin="anonymous"></script>
+	</head>
+	<body onload="main()">
+		<header>
+			<label for="input">Add file:</label>
+			<input type="file" id="input" accept=".class, .jar" multiple/>
+			<button id="decompile-button" disabled>Decompile</button>
+		</header>
+		<h1>Vineflower</h1>
+		<div style="visibility: hidden" id="progress-panel"><i>Decompiling...</i></div>
+		<aside>
+			<ul id="navigation-panel">
+			</ul>
+		</aside>
+		<main id="output-panel">
+		</main>
+		<footer>
+			<a href="https://vineflower.org/">Official Vineflower Website</a>
+			<a href="https://github.com/Chocohead/VineFlower/tree/online">Vineflower Online Github</a>
+		</footer>
+	</body>
 </html>

@@ -5,11 +5,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.teavm.jso.JSBody;
 import org.teavm.jso.browser.Window;
 import org.teavm.jso.core.JSArray;
 import org.teavm.jso.core.JSArrayReader;
@@ -28,8 +31,10 @@ public final class Client {
 	private static HTMLDocument document = Window.current().getDocument();
 	private static HTMLInputElement input = document.getElementById("input").cast();
 	private static HTMLButtonElement decompileButton = document.getElementById("decompile-button").cast();
-	private static HTMLElement responsePanel = document.getElementById("response-panel");
-	private static HTMLElement thinkingPanel = document.getElementById("thinking-panel");
+	private static HTMLElement progressPanel = document.getElementById("progress-panel");
+	private static HTMLElement navigationPanel = document.getElementById("navigation-panel");
+	private static HTMLElement outputPanel = document.getElementById("output-panel");
+	private static Results rootResults = new Results("");
 
 	private Client() {
 	}
@@ -52,7 +57,7 @@ public final class Client {
 
 	private static void startDecompile(Event event) {
 		decompileButton.setDisabled(true);
-		thinkingPanel.getStyle().setProperty("display", "");
+		progressPanel.getStyle().setProperty("visibility", "visible");
 
 		JSArray<JSPromise<File>> files = new JSArray<>();
 		for (org.teavm.jso.file.File file : Utils.iterate(input.getFiles())) {
@@ -76,13 +81,13 @@ public final class Client {
 
 		JSPromise.all(files).then(Client::startDecompile).catchError(error -> {
 			try {
-				responsePanel.appendChild(document.createElement("pre", paragraph -> {
+				outputPanel.clear().withChild("pre", paragraph -> {
 					paragraph.setInnerText(Objects.toString(error));
 					paragraph.setClassName("error");
-				}));
+				});
 			} finally {
 				decompileButton.setDisabled(false);
-				thinkingPanel.getStyle().setProperty("display", "none");
+				progressPanel.getStyle().setProperty("visibility", "hidden");
 			}
 			return null;
 		});
@@ -101,19 +106,63 @@ public final class Client {
 				builder.output(new StringyFileSaver(results)).build().decompile();
 
 				for (Entry<String, String> entry : results.entrySet()) {
-					responsePanel.appendChild(document.createElement("h2", header -> {
-						header.setInnerText(entry.getKey());
-					}));
-					responsePanel.appendChild(document.createElement("pre", paragraph -> {
-						paragraph.setInnerText(entry.getValue());
-					}));
+					String[] packages = entry.getKey().split("/");
+
+					Results root = rootResults;
+					for (int i = 0, end = packages.length - 2; i < end; i++) {
+						root = root.children().computeIfAbsent(packages[i], Results::new);
+					}
+					root.classes().put(packages[packages.length - 1].split("\\.")[0], entry.getValue());
 				}
+
+				buildResultsTree(navigationPanel.clear(), rootResults);
+			} catch (Throwable t) {
+				StringWriter crash = new StringWriter();
+				t.printStackTrace(new PrintWriter(crash));
+				outputPanel.clear().withChild("pre", paragraph -> {
+					paragraph.setInnerText(crash.toString());
+					paragraph.setClassName("error");
+				});
 			} finally {
 				decompileButton.setDisabled(false);
-				thinkingPanel.getStyle().setProperty("display", "none");
+				progressPanel.getStyle().setProperty("visibility", "hidden");
 			}
 		}).start();
 
 		return null;
 	}
+
+	private static void buildResultsTree(HTMLElement panel, Results root) {
+		for (Results child : root.children().values()) {
+			panel.withChild("li", li -> {
+				li.withChild("span", span -> {
+					span.setInnerText(child.name());
+					span.addEventListener("click", event -> {
+						li.getClassList().toggle("open");
+					});
+				}).withChild("ul", ul -> {
+					buildResultsTree(ul, child);
+				});
+			});
+		}
+		for (Entry<String, String> entry : root.classes().entrySet()) {
+			panel.withChild("li", li -> {
+				li.setInnerText(entry.getKey());
+				li.addEventListener("click", event -> switchTo(entry.getValue()));
+			});
+		}
+	}
+
+	private static void switchTo(String content) {
+		outputPanel.clear().withChild("pre", pre -> {
+			pre.withChild("code", code -> {
+				code.setTextContent(content);
+				code.setClassName("language-java");
+				highlightElement(code);
+			});
+		});
+	}
+
+	@JSBody(params = {"element"}, script = "hljs.highlightElement(element)")
+	public static native void highlightElement(HTMLElement element);
 }
